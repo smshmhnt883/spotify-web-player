@@ -1,0 +1,16 @@
+{
+  "short_name": "Spotify",
+  "name": "Spotify Web Player",
+  "icons": [
+    {
+      "src": "https://open.spotifycdn.com/cdn/images/favicon.0f31d2ea.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#121212",
+  "theme_color": "#121212",
+  "display": "standalone",
+  "orientation": "portrait"
+}
