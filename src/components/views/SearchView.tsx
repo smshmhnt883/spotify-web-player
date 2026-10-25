@@ -1,11 +1,12 @@
 import React from 'react';
 import { Play, Pause, Heart } from 'lucide-react';
 import { usePlayerStore } from '../../store/usePlayerStore';
-import { CATEGORIES, TRACKS, PLAYLISTS } from '../../data/mockData';
+import { CATEGORIES, TRACKS } from '../../data/mockData';
 import { formatTime } from '../../utils/formatTime';
 
 export const SearchView: React.FC = () => {
   const {
+    playlists,
     searchQuery,
     currentTrack,
     isPlaying,
@@ -143,7 +144,7 @@ export const SearchView: React.FC = () => {
             {CATEGORIES.map((cat) => (
               <div
                 key={cat.id}
-                onClick={() => navigateTo('playlist', PLAYLISTS[0].id)}
+                onClick={() => navigateTo('playlist', playlists[0]?.id || 'playlist-cloud-vault')}
                 className="aspect-square rounded-lg p-4 relative overflow-hidden cursor-pointer shadow-md hover:scale-[1.02] active:scale-[0.98] transition-transform duration-200"
                 style={{ backgroundColor: cat.color }}
               >

@@ -1,11 +1,12 @@
 import React from 'react';
 import { Play, Pause, Heart } from 'lucide-react';
 import { usePlayerStore } from '../../store/usePlayerStore';
-import { PLAYLISTS, TRACKS } from '../../data/mockData';
+import { TRACKS } from '../../data/mockData';
 import type { Playlist } from '../../types';
 
 export const HomeView: React.FC = () => {
   const {
+    playlists,
     currentTrack,
     isPlaying,
     playTrack,
@@ -64,7 +65,7 @@ export const HomeView: React.FC = () => {
           </div>
 
           {/* Quick Playlists */}
-          {PLAYLISTS.slice(0, 5).map((pl) => {
+          {playlists.slice(0, 5).map((pl) => {
             const isThisPlaying = isPlaying && currentTrack && pl.tracks.some(t => t.id === currentTrack.id);
             return (
               <div
@@ -111,7 +112,7 @@ export const HomeView: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-          {PLAYLISTS.map((pl) => (
+          {playlists.map((pl) => (
             <div
               key={pl.id}
               onClick={() => navigateTo('playlist', pl.id)}

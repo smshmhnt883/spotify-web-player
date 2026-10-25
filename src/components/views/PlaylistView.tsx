@@ -1,7 +1,6 @@
 import React from 'react';
 import { Play, Pause, Heart, Clock, MoreHorizontal, Plus } from 'lucide-react';
 import { usePlayerStore } from '../../store/usePlayerStore';
-import { PLAYLISTS } from '../../data/mockData';
 import { formatTime } from '../../utils/formatTime';
 
 interface PlaylistViewProps {
@@ -10,6 +9,7 @@ interface PlaylistViewProps {
 
 export const PlaylistView: React.FC<PlaylistViewProps> = ({ playlistId }) => {
   const {
+    playlists,
     currentTrack,
     isPlaying,
     likedTrackIds,
@@ -19,7 +19,7 @@ export const PlaylistView: React.FC<PlaylistViewProps> = ({ playlistId }) => {
     addToQueue
   } = usePlayerStore();
 
-  const playlist = PLAYLISTS.find(p => p.id === playlistId) || PLAYLISTS[0];
+  const playlist = playlists.find(p => p.id === playlistId) || playlists[0];
   const isPlaylistActive = isPlaying && currentTrack && playlist.tracks.some(t => t.id === currentTrack.id);
 
   const handlePlaylistPlay = () => {
