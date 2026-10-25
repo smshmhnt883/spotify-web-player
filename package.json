@@ -10,7 +10,8 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "dist:win": "npm run build && electron-builder --win nsis"
+    "dist:win": "npm run build && electron-builder --win nsis",
+    "update-music": "node scripts/generate-manifest.js"
   },
   "dependencies": {
     "lucide-react": "^1.61.0",
