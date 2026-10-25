@@ -1,5 +1,5 @@
 import React from 'react';
-import { ChevronLeft, ChevronRight, Search, X, Bell, User, Upload } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Search, X, Bell, User, Upload, Cloud } from 'lucide-react';
 import { usePlayerStore } from '../../store/usePlayerStore';
 
 interface TopBarProps {
@@ -13,6 +13,8 @@ export const TopBar: React.FC<TopBarProps> = ({ onOpenUploadModal }) => {
     setSearchQuery,
     categoryFilter,
     setCategoryFilter,
+    isCloudSynced,
+    syncCloudLibrary,
     navigateTo
   } = usePlayerStore();
 
@@ -86,7 +88,21 @@ export const TopBar: React.FC<TopBarProps> = ({ onOpenUploadModal }) => {
       </div>
 
       {/* User Actions */}
-      <div className="flex items-center gap-2.5 sm:gap-4">
+      <div className="flex items-center gap-2 sm:gap-3">
+        {/* Cloud Vault Status Pill */}
+        <button
+          onClick={() => syncCloudLibrary()}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition ${
+            isCloudSynced
+              ? 'border-spotify-green/40 bg-spotify-green/10 text-spotify-green'
+              : 'border-white/10 bg-spotify-elevated text-spotify-subdued hover:text-white'
+          }`}
+          title={isCloudSynced ? "Cloudflare R2 Vault Connected" : "Click to sync Cloudflare R2"}
+        >
+          <Cloud size={14} className={isCloudSynced ? "text-spotify-green" : ""} />
+          <span className="hidden sm:inline">{isCloudSynced ? 'R2 Vault Online' : 'Sync R2 Vault'}</span>
+        </button>
+
         {/* Upload Button */}
         <button
           onClick={onOpenUploadModal}

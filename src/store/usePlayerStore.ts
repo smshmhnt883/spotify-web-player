@@ -35,6 +35,8 @@ interface PlayerStore {
   // Library
   likedTrackIds: string[];
   playlists: Playlist[];
+  cloudVaultUrl: string;
+  isCloudSynced: boolean;
   
   // Actions
   playTrack: (track: Track, contextTracks?: Track[]) => void;
@@ -52,6 +54,7 @@ interface PlayerStore {
   addToQueue: (track: Track) => void;
   removeFromQueue: (trackId: string) => void;
   toggleLike: (trackId: string) => void;
+  syncCloudLibrary: (url?: string) => Promise<boolean>;
 }
 
 export const usePlayerStore = create<PlayerStore>((set, get) => ({
@@ -60,6 +63,8 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
   activePlaylistId: null,
   searchQuery: '',
   categoryFilter: 'all',
+  cloudVaultUrl: 'https://pub-4c18be52287241ab9bedbddc0e397a4c.r2.dev',
+  isCloudSynced: false,
   navigateTo: (view, playlistId) => set({ 
     currentView: view, 
     activePlaylistId: playlistId ?? null 
@@ -237,5 +242,41 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
         ? state.likedTrackIds.filter(id => id !== trackId)
         : [...state.likedTrackIds, trackId]
     };
-  })
+  }),
+
+  syncCloudLibrary: async (urlOverride) => {
+    const targetUrl = urlOverride || get().cloudVaultUrl;
+    if (!targetUrl) return false;
+
+    try {
+      const manifestUrl = `${targetUrl.replace(/\/+$/, '')}/library.json`;
+      const res = await fetch(manifestUrl);
+      if (!res.ok) return false;
+
+      const data = await res.json();
+      if (data && Array.isArray(data.playlists) && data.playlists.length > 0) {
+        // Merge cloud playlists with existing ones
+        set({
+          playlists: [...data.playlists, ...PLAYLISTS],
+          isCloudSynced: true,
+          cloudVaultUrl: targetUrl
+        });
+
+        // Set first cloud track if ready
+        const firstCloudTrack = data.playlists[0]?.tracks[0];
+        if (firstCloudTrack && !get().isPlaying) {
+          set({
+            currentTrack: firstCloudTrack,
+            duration: firstCloudTrack.durationSec,
+            contextTracks: data.playlists[0].tracks,
+            contextIndex: 0
+          });
+        }
+        return true;
+      }
+      return false;
+    } catch {
+      return false;
+    }
+  }
 }));

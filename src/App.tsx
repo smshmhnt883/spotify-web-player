@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { YourLibrary } from './components/sidebar/YourLibrary';
 import { TopBar } from './components/topbar/TopBar';
 import { HomeView } from './components/views/HomeView';
@@ -20,7 +20,12 @@ export const App: React.FC = () => {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [isFullScreenPlayerOpen, setIsFullScreenPlayerOpen] = useState(false);
 
-  const { currentView, activePlaylistId } = usePlayerStore();
+  const { currentView, activePlaylistId, syncCloudLibrary } = usePlayerStore();
+
+  useEffect(() => {
+    // Attempt to automatically sync with Cloudflare R2 on startup
+    syncCloudLibrary();
+  }, []);
 
   return (
     <div className="flex flex-col h-screen w-screen overflow-hidden bg-black text-white select-none">
