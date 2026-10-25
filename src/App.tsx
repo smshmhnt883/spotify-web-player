@@ -9,6 +9,7 @@ import { NowPlayingBar } from './components/player/NowPlayingBar';
 import { RightDrawer } from './components/drawers/RightDrawer';
 import { DeviceModal } from './components/modals/DeviceModal';
 import { UploadMusicModal } from './components/upload/UploadMusicModal';
+import { CloudVaultModal } from './components/modals/CloudVaultModal';
 import { MobileNavBar } from './components/mobile/MobileNavBar';
 import { MobileMiniPlayer } from './components/mobile/MobileMiniPlayer';
 import { FullScreenPlayer } from './components/mobile/FullScreenPlayer';
@@ -18,12 +19,13 @@ import { usePlayerStore } from './store/usePlayerStore';
 export const App: React.FC = () => {
   const [isDeviceModalOpen, setIsDeviceModalOpen] = useState(false);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [isCloudVaultModalOpen, setIsCloudVaultModalOpen] = useState(false);
   const [isFullScreenPlayerOpen, setIsFullScreenPlayerOpen] = useState(false);
 
   const { currentView, activePlaylistId, syncCloudLibrary } = usePlayerStore();
 
   useEffect(() => {
-    // Attempt to automatically sync with Cloudflare R2 on startup
+    // Attempt to automatically sync with Cloudflare on startup
     syncCloudLibrary();
   }, []);
 
@@ -41,7 +43,10 @@ export const App: React.FC = () => {
 
         {/* Center: Main Scrollable Viewport */}
         <main className="flex-1 flex flex-col bg-spotify-base md:rounded-lg m-0 md:m-2 md:ml-0 overflow-hidden relative">
-          <TopBar onOpenUploadModal={() => setIsUploadModalOpen(true)} />
+          <TopBar 
+            onOpenUploadModal={() => setIsUploadModalOpen(true)} 
+            onOpenCloudVaultModal={() => setIsCloudVaultModalOpen(true)}
+          />
 
           <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 scroll-smooth">
             {currentView === 'home' && <HomeView />}
@@ -82,6 +87,11 @@ export const App: React.FC = () => {
       <UploadMusicModal
         isOpen={isUploadModalOpen}
         onClose={() => setIsUploadModalOpen(false)}
+      />
+
+      <CloudVaultModal
+        isOpen={isCloudVaultModalOpen}
+        onClose={() => setIsCloudVaultModalOpen(false)}
       />
     </div>
   );

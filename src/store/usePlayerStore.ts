@@ -36,7 +36,11 @@ interface PlayerStore {
   likedTrackIds: string[];
   playlists: Playlist[];
   cloudVaultUrl: string;
+  workerApiUrl: string;
   isCloudSynced: boolean;
+  cloudSyncStatus: 'idle' | 'syncing' | 'success' | 'error';
+  cloudSyncMessage: string;
+  cloudTrackCount: number;
   
   // Actions
   playTrack: (track: Track, contextTracks?: Track[]) => void;
@@ -54,6 +58,7 @@ interface PlayerStore {
   addToQueue: (track: Track) => void;
   removeFromQueue: (trackId: string) => void;
   toggleLike: (trackId: string) => void;
+  setWorkerApiUrl: (url: string) => void;
   syncCloudLibrary: (url?: string) => Promise<boolean>;
 }
 
@@ -64,7 +69,11 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
   searchQuery: '',
   categoryFilter: 'all',
   cloudVaultUrl: 'https://pub-4c18be52287241ab9bedbddc0e397a4c.r2.dev',
+  workerApiUrl: typeof window !== 'undefined' ? (localStorage.getItem('vaultx_worker_api_url') || '') : '',
   isCloudSynced: false,
+  cloudSyncStatus: 'idle',
+  cloudSyncMessage: '',
+  cloudTrackCount: 0,
   navigateTo: (view, playlistId) => set({ 
     currentView: view, 
     activePlaylistId: playlistId ?? null 
@@ -244,39 +253,94 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
     };
   }),
 
-  syncCloudLibrary: async (urlOverride) => {
-    const targetUrl = urlOverride || get().cloudVaultUrl;
-    if (!targetUrl) return false;
-
-    try {
-      const manifestUrl = `${targetUrl.replace(/\/+$/, '')}/library.json`;
-      const res = await fetch(manifestUrl);
-      if (!res.ok) return false;
-
-      const data = await res.json();
-      if (data && Array.isArray(data.playlists) && data.playlists.length > 0) {
-        // Merge cloud playlists with existing ones
-        set({
-          playlists: [...data.playlists, ...PLAYLISTS],
-          isCloudSynced: true,
-          cloudVaultUrl: targetUrl
-        });
-
-        // Set first cloud track if ready
-        const firstCloudTrack = data.playlists[0]?.tracks[0];
-        if (firstCloudTrack && !get().isPlaying) {
-          set({
-            currentTrack: firstCloudTrack,
-            duration: firstCloudTrack.durationSec,
-            contextTracks: data.playlists[0].tracks,
-            contextIndex: 0
-          });
-        }
-        return true;
-      }
-      return false;
-    } catch {
-      return false;
+  setWorkerApiUrl: (url: string) => {
+    const clean = url.trim();
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('vaultx_worker_api_url', clean);
     }
+    set({ workerApiUrl: clean });
+  },
+
+  syncCloudLibrary: async (urlOverride) => {
+    const { workerApiUrl, cloudVaultUrl } = get();
+    const candidateWorker = (urlOverride !== undefined ? urlOverride : workerApiUrl || '').trim();
+
+    set({ cloudSyncStatus: 'syncing', cloudSyncMessage: 'Connecting to Cloudflare Vault...' });
+
+    // 1. Prioritize Method 2: Cloudflare Worker Real-Time API
+    if (candidateWorker) {
+      try {
+        const cleanWorkerUrl = candidateWorker.replace(/\/+$/, '');
+        const res = await fetch(cleanWorkerUrl);
+        if (res.ok) {
+          const data = await res.json();
+          if (data && Array.isArray(data.playlists) && data.playlists.length > 0) {
+            const total = data.totalTracks || data.playlists.reduce((acc: number, p: any) => acc + (p.tracks?.length || 0), 0);
+            set({
+              playlists: [...data.playlists, ...PLAYLISTS],
+              isCloudSynced: true,
+              cloudSyncStatus: 'success',
+              cloudSyncMessage: `Real-Time Discovery: ${total} tracks loaded`,
+              cloudTrackCount: total,
+              workerApiUrl: cleanWorkerUrl
+            });
+            if (typeof window !== 'undefined') {
+              localStorage.setItem('vaultx_worker_api_url', cleanWorkerUrl);
+            }
+
+            const firstCloudTrack = data.playlists[0]?.tracks[0];
+            if (firstCloudTrack && !get().isPlaying) {
+              set({
+                currentTrack: firstCloudTrack,
+                duration: firstCloudTrack.durationSec,
+                contextTracks: data.playlists[0].tracks,
+                contextIndex: 0
+              });
+            }
+            return true;
+          }
+        }
+      } catch (err) {
+        console.warn('Worker sync failed, falling back to static manifest:', err);
+      }
+    }
+
+    // 2. Fallback to direct Cloudflare R2 library.json manifest
+    try {
+      const manifestUrl = `${cloudVaultUrl.replace(/\/+$/, '')}/library.json`;
+      const res = await fetch(manifestUrl);
+      if (res.ok) {
+        const data = await res.json();
+        if (data && Array.isArray(data.playlists) && data.playlists.length > 0) {
+          const total = data.playlists.reduce((acc: number, p: any) => acc + (p.tracks?.length || 0), 0);
+          set({
+            playlists: [...data.playlists, ...PLAYLISTS],
+            isCloudSynced: true,
+            cloudSyncStatus: 'success',
+            cloudSyncMessage: `Static R2 Manifest: ${total} tracks loaded`,
+            cloudTrackCount: total
+          });
+
+          const firstCloudTrack = data.playlists[0]?.tracks[0];
+          if (firstCloudTrack && !get().isPlaying) {
+            set({
+              currentTrack: firstCloudTrack,
+              duration: firstCloudTrack.durationSec,
+              contextTracks: data.playlists[0].tracks,
+              contextIndex: 0
+            });
+          }
+          return true;
+        }
+      }
+    } catch (err) {
+      console.warn('Static R2 manifest error:', err);
+    }
+
+    set({
+      cloudSyncStatus: 'error',
+      cloudSyncMessage: 'Unable to connect to Cloudflare Vault. Check your Worker URL or R2 bucket.'
+    });
+    return false;
   }
 }));

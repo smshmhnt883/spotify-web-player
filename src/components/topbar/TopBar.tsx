@@ -4,9 +4,10 @@ import { usePlayerStore } from '../../store/usePlayerStore';
 
 interface TopBarProps {
   onOpenUploadModal: () => void;
+  onOpenCloudVaultModal: () => void;
 }
 
-export const TopBar: React.FC<TopBarProps> = ({ onOpenUploadModal }) => {
+export const TopBar: React.FC<TopBarProps> = ({ onOpenUploadModal, onOpenCloudVaultModal }) => {
   const {
     currentView,
     searchQuery,
@@ -14,7 +15,7 @@ export const TopBar: React.FC<TopBarProps> = ({ onOpenUploadModal }) => {
     categoryFilter,
     setCategoryFilter,
     isCloudSynced,
-    syncCloudLibrary,
+    workerApiUrl,
     navigateTo
   } = usePlayerStore();
 
@@ -91,16 +92,18 @@ export const TopBar: React.FC<TopBarProps> = ({ onOpenUploadModal }) => {
       <div className="flex items-center gap-2 sm:gap-3">
         {/* Cloud Vault Status Pill */}
         <button
-          onClick={() => syncCloudLibrary()}
+          onClick={onOpenCloudVaultModal}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition ${
             isCloudSynced
-              ? 'border-spotify-green/40 bg-spotify-green/10 text-spotify-green'
-              : 'border-white/10 bg-spotify-elevated text-spotify-subdued hover:text-white'
+              ? 'border-spotify-green/40 bg-spotify-green/10 text-spotify-green hover:bg-spotify-green/20'
+              : 'border-white/10 bg-spotify-elevated text-spotify-subdued hover:text-white hover:border-white/30'
           }`}
-          title={isCloudSynced ? "Cloudflare R2 Vault Connected" : "Click to sync Cloudflare R2"}
+          title={isCloudSynced ? "Cloudflare Vault Online (Click to configure)" : "Connect Cloudflare R2 / Worker Vault"}
         >
           <Cloud size={14} className={isCloudSynced ? "text-spotify-green" : ""} />
-          <span className="hidden sm:inline">{isCloudSynced ? 'R2 Vault Online' : 'Sync R2 Vault'}</span>
+          <span className="hidden sm:inline">
+            {isCloudSynced ? (workerApiUrl ? 'Worker Vault Online' : 'R2 Vault Online') : 'Connect Vault'}
+          </span>
         </button>
 
         {/* Upload Button */}
