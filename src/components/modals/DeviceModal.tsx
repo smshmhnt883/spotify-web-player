@@ -47,7 +47,7 @@ export const DeviceModal: React.FC<DeviceModalProps> = ({ isOpen, onClose }) => 
               <Speaker size={22} className="text-spotify-subdued" />
               <div>
                 <p className="text-sm font-semibold text-white">Living Room Soundbar</p>
-                <p className="text-xs text-spotify-subdued">Spotify Connect</p>
+                <p className="text-xs text-spotify-subdued">VaultX Connect</p>
               </div>
             </div>
           </div>
@@ -57,14 +57,14 @@ export const DeviceModal: React.FC<DeviceModalProps> = ({ isOpen, onClose }) => 
               <Smartphone size={22} className="text-spotify-subdued" />
               <div>
                 <p className="text-sm font-semibold text-white">iPhone 16 Pro</p>
-                <p className="text-xs text-spotify-subdued">Spotify Connect</p>
+                <p className="text-xs text-spotify-subdued">VaultX Connect</p>
               </div>
             </div>
           </div>
         </div>
 
         <div className="text-xs text-spotify-subdued border-t border-white/10 pt-4 text-center">
-          Powered by real-time WebSocket state synchronization engine (Spotify Dealer protocol).
+          Powered by real-time WebSocket state synchronization engine (VaultX Protocol).
         </div>
       </div>
     </div>

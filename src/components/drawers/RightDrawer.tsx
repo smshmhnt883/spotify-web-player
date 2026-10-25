@@ -113,7 +113,7 @@ export const RightDrawer: React.FC = () => {
               <span className="text-spotify-subdued">Main Artist, Producer</span>
             </div>
             <div className="flex justify-between py-1 border-b border-white/5">
-              <span className="text-white font-medium">Spotify Studio Labs</span>
+              <span className="text-white font-medium">VaultX Labs</span>
               <span className="text-spotify-subdued">Mastering Engineer</span>
             </div>
             <div className="flex justify-between py-1">

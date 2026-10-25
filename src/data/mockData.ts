@@ -120,7 +120,7 @@ export const PLAYLISTS: Playlist[] = [
     description: 'The hottest tracks right now across synthwave, lofi, and electronic beats.',
     coverUrl: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=500&auto=format&fit=crop&q=80',
     dominantColor: '#4338ca',
-    creator: 'Spotify',
+    creator: 'VaultX Music',
     followers: '34,892,105',
     tracks: [TRACKS[0], TRACKS[1], TRACKS[3], TRACKS[2]]
   },
@@ -130,7 +130,7 @@ export const PLAYLISTS: Playlist[] = [
     description: 'Relaxing instrumental lofi hip hop beats to study, chill, or code to.',
     coverUrl: 'https://images.unsplash.com/photo-1507838153414-b4b713384a76?w=500&auto=format&fit=crop&q=80',
     dominantColor: '#854d0e',
-    creator: 'Spotify Editorial',
+    creator: 'VaultX Editorial',
     followers: '6,412,890',
     tracks: [TRACKS[0], TRACKS[2], TRACKS[4]]
   },
@@ -150,7 +150,7 @@ export const PLAYLISTS: Playlist[] = [
     description: 'Ambient atmospheres and steady beats designed to maximize your concentration.',
     coverUrl: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=500&auto=format&fit=crop&q=80',
     dominantColor: '#047857',
-    creator: 'Spotify Focus',
+    creator: 'VaultX Focus',
     followers: '4,108,300',
     tracks: [TRACKS[4], TRACKS[2], TRACKS[0]]
   }
