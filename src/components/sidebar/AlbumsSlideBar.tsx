@@ -99,7 +99,7 @@ export const AlbumsSlideBar: React.FC<AlbumsSlideBarProps> = ({
             >
               <div className="relative aspect-square w-full rounded-xl overflow-hidden mb-3 bg-neutral-900 shadow-md">
                 <img
-                  src={primaryAlbum.coverUrl}
+                  src={primaryAlbum.coverUrl || '/artwork.png'}
                   alt={primaryAlbum.title}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                 />

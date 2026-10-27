@@ -5,11 +5,11 @@ export const TRACKS: Track[] = [
     id: 'track-1',
     title: 'Midnight City Lights',
     artist: 'Aether Wave',
-    album: 'Neon Horizon',
+    album: 'Cloud Vault Favorites',
     durationSec: 165,
     audioUrl: 'https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=lofi-study-112191.mp3',
-    coverUrl: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=500&auto=format&fit=crop&q=80',
-    dominantColor: '#4f1496',
+    coverUrl: '/artwork.png',
+    dominantColor: '#f3cbc4',
     releaseYear: 2024,
     lyrics: [
       { timeMs: 0, text: '♪ (Instrumental Intro) ♪' },
@@ -115,13 +115,13 @@ export const TRACKS: Track[] = [
 
 export const PLAYLISTS: Playlist[] = [
   {
-    id: 'playlist-today-top',
-    title: "Today's Top Hits",
-    description: 'The hottest tracks right now across synthwave, lofi, and electronic beats.',
-    coverUrl: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=500&auto=format&fit=crop&q=80',
-    dominantColor: '#4338ca',
-    creator: 'VaultX Music',
-    followers: '34,892,105',
+    id: 'playlist-cloud-vault',
+    title: "Cloud Vault Favorites",
+    description: 'Personal music collection streamed directly from your Cloudflare Vault.',
+    coverUrl: '/artwork.png',
+    dominantColor: '#f3cbc4',
+    creator: 'VaultX Cloud',
+    followers: '1',
     tracks: [TRACKS[0], TRACKS[1], TRACKS[3], TRACKS[2]]
   },
   {

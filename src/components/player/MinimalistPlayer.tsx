@@ -69,8 +69,9 @@ export const MinimalistPlayer: React.FC<MinimalistPlayerProps> = ({
 
   // Active playlist / album info
   const activePlaylist = playlists.find(p => p.id === activePlaylistId) || playlists[0];
-  const albumTitle = currentTrack?.album || activePlaylist?.title || 'ENDLESSNESS';
-  const artistName = currentTrack?.artist || 'NALA SINEPHRO';
+  const albumTitle = currentTrack?.album || activePlaylist?.title || 'CLOUD VAULT FAVORITES';
+  const artistName = currentTrack?.artist || 'VAULTX ARTIST';
+  const displayCover = currentTrack?.coverUrl || '/artwork.png';
   const isLiked = currentTrack ? likedTrackIds.includes(currentTrack.id) : false;
 
   // Next up tracks: tracks following current track in context
@@ -180,38 +181,36 @@ export const MinimalistPlayer: React.FC<MinimalistPlayerProps> = ({
           
           {/* COLUMN 1: LARGE HERO ALBUM ARTWORK DISPLAY (LEFT) */}
           <section className="flex-1 flex items-center justify-center p-4 sm:p-6 lg:p-8 overflow-hidden bg-[#090a0d]/40">
-            <div className="relative aspect-square w-full max-w-[460px] lg:max-w-[500px] rounded-2xl overflow-hidden shadow-2xl border border-white/10 bg-[#e8e4d9] group flex flex-col justify-between p-6 sm:p-7 select-none transition-transform duration-300">
+            <div className="relative aspect-square w-full max-w-[460px] lg:max-w-[500px] rounded-2xl overflow-hidden shadow-2xl border border-white/10 bg-[#ece3d6] group flex flex-col justify-between p-6 sm:p-7 select-none transition-transform duration-300">
               
               {/* Actual Album Artwork Image Background */}
-              {currentTrack?.coverUrl && (
-                <img
-                  src={currentTrack.coverUrl}
-                  alt={currentTrack.title}
-                  className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                />
-              )}
+              <img
+                src={displayCover}
+                alt={currentTrack?.title || 'Album Artwork'}
+                className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              />
 
               {/* Subtle Ambient Vignette Overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/60 pointer-events-none" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/40 pointer-events-none" />
 
               {/* Artwork Top Header: Geometric Logo & Album Title */}
               <div className="relative z-10 flex items-center justify-between w-full">
-                {/* Geometric Logo (Tidal/VaultX Motif from Reference) */}
+                {/* Geometric Logo (Tidal/VaultX Motif with pastel blush & cyan accents) */}
                 <div
                   onClick={onToggleAlbumsSlideBar}
                   className="w-9 h-9 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center cursor-pointer hover:scale-110 active:scale-95 transition text-white border border-white/20 shadow-lg"
                   title="Click to view Albums"
                 >
                   <div className="grid grid-cols-2 gap-0.5">
-                    <span className="w-1.5 h-1.5 bg-white rounded-full" />
+                    <span className="w-1.5 h-1.5 bg-[#f3cbc4] rounded-full" />
                     <span className="w-1.5 h-1.5 bg-[#2dd4bf] rounded-full" />
                     <span className="w-1.5 h-1.5 bg-[#2dd4bf] rounded-full" />
-                    <span className="w-1.5 h-1.5 bg-white rounded-full" />
+                    <span className="w-1.5 h-1.5 bg-[#f3cbc4] rounded-full" />
                   </div>
                 </div>
 
                 {/* Album Title (Matches Top-Right of Reference Artwork) */}
-                <span className="text-xs sm:text-sm font-black tracking-widest text-white uppercase drop-shadow-md bg-black/40 backdrop-blur-md px-3 py-1 rounded-full border border-white/10">
+                <span className="text-xs sm:text-sm font-black tracking-widest text-white uppercase drop-shadow-md bg-black/40 backdrop-blur-md px-3.5 py-1 rounded-full border border-white/10">
                   {albumTitle}
                 </span>
               </div>
@@ -221,7 +220,7 @@ export const MinimalistPlayer: React.FC<MinimalistPlayerProps> = ({
                 onClick={togglePlay}
                 className="absolute inset-0 flex items-center justify-center cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10"
               >
-                <div className="w-16 h-16 rounded-full bg-[#2dd4bf] text-black flex items-center justify-center shadow-2xl transform scale-90 group-hover:scale-100 transition-transform">
+                <div className="w-16 h-16 rounded-full bg-[#f3cbc4] hover:bg-white text-black flex items-center justify-center shadow-2xl transform scale-90 group-hover:scale-100 transition-transform">
                   {isPlaying ? (
                     <Pause size={28} className="fill-black" />
                   ) : (
@@ -232,16 +231,16 @@ export const MinimalistPlayer: React.FC<MinimalistPlayerProps> = ({
 
               {/* Artwork Bottom Header: Artist Name (Matches Bottom-Left of Reference Artwork) */}
               <div className="relative z-10 flex items-end justify-between w-full">
-                <span className="text-xs sm:text-sm font-black tracking-widest text-white uppercase drop-shadow-md bg-black/40 backdrop-blur-md px-3 py-1 rounded-full border border-white/10">
+                <span className="text-xs sm:text-sm font-black tracking-widest text-white uppercase drop-shadow-md bg-black/40 backdrop-blur-md px-3.5 py-1 rounded-full border border-white/10">
                   {artistName}
                 </span>
 
-                {/* Pulsing Audio Wave Indicator */}
+                {/* Pulsing Audio Wave Indicator (Pink & Teal accents) */}
                 {isPlaying && (
                   <div className="flex items-end gap-0.5 h-5 px-2 py-1 rounded-full bg-black/40 backdrop-blur-md border border-white/10">
-                    <span className="w-0.5 h-3 bg-[#2dd4bf] rounded-full animate-pulse" />
+                    <span className="w-0.5 h-3 bg-[#f3cbc4] rounded-full animate-pulse" />
                     <span className="w-0.5 h-4 bg-[#2dd4bf] rounded-full animate-bounce delay-75" />
-                    <span className="w-0.5 h-2 bg-[#2dd4bf] rounded-full animate-pulse delay-150" />
+                    <span className="w-0.5 h-2 bg-[#f3cbc4] rounded-full animate-pulse delay-150" />
                     <span className="w-0.5 h-4 bg-[#2dd4bf] rounded-full animate-bounce delay-100" />
                   </div>
                 )}

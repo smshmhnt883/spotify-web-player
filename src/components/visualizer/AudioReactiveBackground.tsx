@@ -48,7 +48,7 @@ export const AudioReactiveBackground: React.FC = () => {
     // Initialize minimalist floating light particles
     const particleCount = 45;
     const particles: Particle[] = [];
-    const colors = [primaryColor, '#2dd4bf', '#818cf8', '#c084fc', '#38bdf8'];
+    const colors = [primaryColor, '#f3cbc4', '#2dd4bf', '#ece3d6', '#b6bdac', '#fbcfe8'];
 
     for (let i = 0; i < particleCount; i++) {
       particles.push({
@@ -198,12 +198,12 @@ export const AudioReactiveBackground: React.FC = () => {
       {/* 2. Soft Dark Vignette (allowing lighting to breathe through corners and edges) */}
       <div className="absolute inset-0 bg-radial-gradient from-transparent via-black/40 to-black/85" />
 
-      {/* 3. Audio-Reactive Ambient Glow Blobs (CSS hardware accelerated) */}
+      {/* 3. Audio-Reactive Ambient Glow Blobs (Blush Pink, Sage & Cyan) */}
       <div
         className={`absolute -top-32 -left-32 w-96 h-96 rounded-full blur-[110px] transition-all duration-300 opacity-60 ${
           isPlaying ? 'scale-125' : 'scale-90 opacity-25'
         }`}
-        style={{ backgroundColor: primaryColor }}
+        style={{ backgroundColor: '#f3cbc4' }}
       />
       <div
         className={`absolute -bottom-32 -right-32 w-[480px] h-[480px] rounded-full blur-[130px] transition-all duration-300 opacity-55 ${
@@ -213,9 +213,9 @@ export const AudioReactiveBackground: React.FC = () => {
       />
       <div
         className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] rounded-full blur-[140px] transition-all duration-500 pointer-events-none ${
-          isPlaying ? 'opacity-40 scale-110' : 'opacity-15 scale-95'
+          isPlaying ? 'opacity-35 scale-110' : 'opacity-15 scale-95'
         }`}
-        style={{ backgroundColor: primaryColor }}
+        style={{ backgroundColor: '#ece3d6' }}
       />
 
       {/* 4. Canvas Audio Visualizer Layer */}
