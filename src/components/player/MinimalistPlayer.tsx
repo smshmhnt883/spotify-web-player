@@ -62,7 +62,10 @@ export const MinimalistPlayer: React.FC<MinimalistPlayerProps> = ({
 
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showVolumeSlider, setShowVolumeSlider] = useState(false);
+  const [mobileTab, setMobileTab] = useState<'player' | 'queue'>('player');
+
   const scrubberRef = useRef<HTMLDivElement | null>(null);
+  const mobileScrubberRef = useRef<HTMLDivElement | null>(null);
 
   // Active playlist / album info
   const activePlaylist = playlists.find(p => p.id === activePlaylistId) || playlists[0];
@@ -87,12 +90,26 @@ export const MinimalistPlayer: React.FC<MinimalistPlayerProps> = ({
   // Scrubber progress %
   const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0;
 
-  const handleScrubberClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!scrubberRef.current || duration <= 0) return;
-    const rect = scrubberRef.current.getBoundingClientRect();
-    const clickX = e.clientX - rect.left;
+  const handleSeekFromClientX = (targetRef: React.RefObject<HTMLDivElement | null>, clientX: number) => {
+    if (!targetRef.current || duration <= 0) return;
+    const rect = targetRef.current.getBoundingClientRect();
+    const clickX = clientX - rect.left;
     const ratio = Math.max(0, Math.min(1, clickX / rect.width));
     seek(ratio * duration);
+  };
+
+  const handleScrubberClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    handleSeekFromClientX(scrubberRef, e.clientX);
+  };
+
+  const handleMobileScrubberClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    handleSeekFromClientX(mobileScrubberRef, e.clientX);
+  };
+
+  const handleMobileScrubberTouch = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (e.touches && e.touches[0]) {
+      handleSeekFromClientX(mobileScrubberRef, e.touches[0].clientX);
+    }
   };
 
   const toggleFullscreen = () => {
@@ -104,27 +121,27 @@ export const MinimalistPlayer: React.FC<MinimalistPlayerProps> = ({
   };
 
   return (
-    <div className="relative w-full h-screen bg-[#07090b] flex items-center justify-center p-2 sm:p-3 md:p-4 lg:p-6 select-none overflow-hidden">
+    <div className="relative w-full h-[100dvh] md:h-screen bg-[#07090b] flex items-center justify-center p-0 md:p-3 lg:p-6 select-none overflow-hidden">
       {/* 1. Audio-Reactive Background Lighting & Dynamic Particle Visualizer */}
       <AudioReactiveBackground />
 
       {/* 2. Floating Minimalist Player Window */}
       <div 
-        className="relative z-10 w-full max-w-6xl xl:max-w-7xl h-full max-h-[880px] lg:max-h-[900px] bg-[#0c0d10]/95 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.85)] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-300 transition-shadow duration-500"
+        className="relative z-10 w-full max-w-6xl xl:max-w-7xl h-full md:max-h-[880px] lg:max-h-[900px] bg-[#0c0d10]/95 backdrop-blur-2xl border-0 md:border border-white/10 rounded-none md:rounded-2xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.85)] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-300 transition-shadow duration-500"
         style={{
           boxShadow: isPlaying 
-            ? `0 25px 80px -15px ${currentTrack?.dominantColor ? currentTrack.dominantColor + '40' : 'rgba(45,212,191,0.25)'}`
+            ? `0 25px 80px -15px ${currentTrack?.dominantColor ? currentTrack.dominantColor + '40' : 'rgba(234,165,153,0.25)'}`
             : '0 25px 60px -15px rgba(0,0,0,0.85)'
         }}
       >
         
         {/* TOP BAR / WINDOW CHROME */}
-        <header className="h-13 px-4 sm:px-6 border-b border-white/5 flex items-center justify-between flex-shrink-0 bg-[#090a0d]/85">
-          {/* Left: Enhanced Albums Slide Bar Trigger (Clean Minimalist Design, No 3 Dots) */}
-          <div className="flex items-center gap-3">
+        <header className="h-14 px-3 sm:px-6 border-b border-white/5 flex items-center justify-between flex-shrink-0 bg-[#090a0d]/90">
+          {/* Left: Enhanced Albums Slide Bar Trigger */}
+          <div className="flex items-center gap-2 sm:gap-3">
             <button
               onClick={onToggleAlbumsSlideBar}
-              className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-neutral-200 hover:text-white transition group border border-white/5 shadow-sm active:scale-95"
+              className="flex items-center gap-2 px-2.5 sm:px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-neutral-200 hover:text-white transition group border border-white/5 shadow-sm active:scale-95"
               title="Open Albums Slide Bar"
             >
               <Menu size={16} className="text-white group-hover:text-[#EAA599] group-hover:scale-110 transition-all" />
@@ -142,19 +159,48 @@ export const MinimalistPlayer: React.FC<MinimalistPlayerProps> = ({
             )}
           </div>
 
+          {/* Center on Mobile: Segmented Tab Switcher [Now Playing | Musics] */}
+          <div className="flex md:hidden items-center p-0.5 bg-black/40 border border-white/10 rounded-full shadow-inner">
+            <button
+              onClick={() => setMobileTab('player')}
+              className={`px-3 py-1 rounded-full text-xs font-bold tracking-wide transition-all ${
+                mobileTab === 'player'
+                  ? 'bg-white/15 text-white shadow-sm'
+                  : 'text-neutral-400 hover:text-white'
+              }`}
+            >
+              Player
+            </button>
+            <button
+              onClick={() => setMobileTab('queue')}
+              className={`px-3 py-1 rounded-full text-xs font-bold tracking-wide transition-all flex items-center gap-1.5 ${
+                mobileTab === 'queue'
+                  ? 'bg-white/15 text-white shadow-sm'
+                  : 'text-neutral-400 hover:text-white'
+              }`}
+            >
+              <span>Musics</span>
+              {nextUpTracks.length > 0 && (
+                <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-[#EAA599]/20 text-[#EAA599] font-bold">
+                  {nextUpTracks.length}
+                </span>
+              )}
+            </button>
+          </div>
+
           {/* Right: Cloud Vault & Fullscreen */}
-          <div className="flex items-center gap-2 sm:gap-3">
-            {/* Cloud Vault Connection Button (Frosted Minimalist Styling) */}
+          <div className="flex items-center gap-1.5 sm:gap-3">
+            {/* Cloud Vault Connection Button */}
             <button
               onClick={onOpenCloudVaultModal}
-              className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border transition ${
+              className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-full text-xs font-medium border transition ${
                 isCloudSynced
                   ? 'bg-white/10 border-white/20 text-white hover:bg-white/15'
                   : 'bg-white/5 border-white/10 text-neutral-400 hover:text-white'
               }`}
               title="Cloudflare R2 Vault Settings"
             >
-              <Cloud size={13} className={isCloudSynced ? 'text-[#EAA599]' : ''} />
+              <Cloud size={14} className={isCloudSynced ? 'text-[#EAA599]' : ''} />
               <span className="hidden md:inline">
                 {isCloudSynced ? 'Vault Online' : 'Connect Vault'}
               </span>
@@ -171,8 +217,10 @@ export const MinimalistPlayer: React.FC<MinimalistPlayerProps> = ({
           </div>
         </header>
 
-        {/* MAIN BODY: 2-COLUMN VIEW (ARTWORK ON LEFT, MUSICS ON RIGHT) */}
-        <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
+        {/* ============================================================== */}
+        {/* DESKTOP BODY: 2-COLUMN VIEW (ARTWORK ON LEFT, MUSICS ON RIGHT) */}
+        {/* ============================================================== */}
+        <div className="hidden md:flex flex-1 flex-row overflow-hidden">
           
           {/* COLUMN 1: LARGE HERO ALBUM ARTWORK DISPLAY (LEFT - ENLARGED TO FILL SPACE) */}
           <section className="flex-1 flex items-center justify-center p-3 sm:p-4 lg:p-6 overflow-hidden bg-[#090a0d]/40">
@@ -244,7 +292,7 @@ export const MinimalistPlayer: React.FC<MinimalistPlayerProps> = ({
           </section>
 
           {/* COLUMN 2: MUSICS / QUEUE (RIGHT SIDE) */}
-          <section className="w-full md:w-[340px] lg:w-[360px] xl:w-[380px] flex flex-col p-4 sm:p-5 lg:p-6 border-t md:border-t-0 md:border-l border-white/5 overflow-hidden bg-[#0c0d10]/95 flex-shrink-0">
+          <section className="w-full md:w-[340px] lg:w-[360px] xl:w-[380px] flex flex-col p-4 sm:p-5 lg:p-6 border-l border-white/5 overflow-hidden bg-[#0c0d10]/95 flex-shrink-0">
             
             {/* 1. Header: PLAYING FROM */}
             <div className="mb-3">
@@ -253,7 +301,7 @@ export const MinimalistPlayer: React.FC<MinimalistPlayerProps> = ({
               </span>
             </div>
 
-            {/* 2. Currently Playing Track Card (Matches Highlighted Item in Reference) */}
+            {/* 2. Currently Playing Track Card */}
             {currentTrack && (
               <div className="flex items-center justify-between p-2.5 rounded-xl bg-white/5 border border-white/10 shadow-sm mb-5 transition">
                 <div className="flex items-center gap-3 min-w-0">
@@ -296,7 +344,7 @@ export const MinimalistPlayer: React.FC<MinimalistPlayerProps> = ({
               </span>
             </div>
 
-            {/* 4. Scrollable List of Tracks (Matches Right Column in Reference) */}
+            {/* 4. Scrollable List of Tracks */}
             <div className="flex-1 overflow-y-auto space-y-1 pr-1 custom-scrollbar">
               {nextUpTracks.length === 0 ? (
                 <div className="text-center py-10 text-xs text-neutral-500">
@@ -342,8 +390,374 @@ export const MinimalistPlayer: React.FC<MinimalistPlayerProps> = ({
           </section>
         </div>
 
-        {/* BOTTOM PLAYBACK BAR (MATCHES REFERENCE BOTTOM DECK) */}
-        <footer className="h-20 sm:h-22 px-4 sm:px-6 border-t border-white/5 bg-[#090a0d]/95 flex items-center justify-between gap-3 select-none flex-shrink-0">
+        {/* ============================================================== */}
+        {/* MOBILE BODY: BESPOKE RESPONSIVE LAYOUT (VISIBLE ON < md)       */}
+        {/* ============================================================== */}
+        <div className="flex md:hidden flex-1 flex-col overflow-hidden">
+          {mobileTab === 'player' ? (
+            /* MOBILE TAB 1: PLAYER VIEW */
+            <div className="flex-1 flex flex-col justify-between p-4 overflow-y-auto">
+              
+              {/* Centered Artwork Display */}
+              <div className="flex-1 flex items-center justify-center py-2 min-h-0">
+                <div className="relative aspect-square w-full max-w-[290px] xs:max-w-[320px] rounded-2xl overflow-hidden shadow-2xl border border-white/10 bg-[#ece3d6] flex flex-col justify-between p-4 select-none transition-all duration-300">
+                  
+                  {/* Artwork Image */}
+                  <img
+                    src={displayCover}
+                    alt={currentTrack?.title || 'Album Artwork'}
+                    className="absolute inset-0 w-full h-full object-cover"
+                  />
+
+                  {/* Subtle Ambient Vignette */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/40 pointer-events-none" />
+
+                  {/* Artwork Top Header */}
+                  <div className="relative z-10 flex items-center justify-between w-full">
+                    <div
+                      onClick={onToggleAlbumsSlideBar}
+                      className="w-8 h-8 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center cursor-pointer hover:scale-110 active:scale-95 transition text-white border border-white/20 shadow-lg"
+                      title="Click to view Albums"
+                    >
+                      <div className="grid grid-cols-2 gap-0.5">
+                        <span className="w-1.5 h-1.5 bg-[#f3cbc4] rounded-full" />
+                        <span className="w-1.5 h-1.5 bg-white rounded-full" />
+                        <span className="w-1.5 h-1.5 bg-white rounded-full" />
+                        <span className="w-1.5 h-1.5 bg-[#f3cbc4] rounded-full" />
+                      </div>
+                    </div>
+
+                    <span className="text-[10px] font-black tracking-widest text-white uppercase drop-shadow-md bg-black/40 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 max-w-[150px] truncate">
+                      {albumTitle}
+                    </span>
+                  </div>
+
+                  {/* Center Play/Pause Touch Overlay */}
+                  <div
+                    onClick={togglePlay}
+                    className="absolute inset-0 flex items-center justify-center cursor-pointer z-10"
+                  >
+                    <div className="w-14 h-14 rounded-full bg-[#f3cbc4]/90 hover:bg-white text-black flex items-center justify-center shadow-2xl transform active:scale-90 transition-transform">
+                      {isPlaying ? (
+                        <Pause size={24} className="fill-black" />
+                      ) : (
+                        <Play size={24} className="fill-black ml-1" />
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Artwork Bottom Header */}
+                  <div className="relative z-10 flex items-end justify-between w-full">
+                    <span className="text-[10px] font-black tracking-widest text-white uppercase drop-shadow-md bg-black/40 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 max-w-[150px] truncate">
+                      {artistName}
+                    </span>
+
+                    {isPlaying && (
+                      <div className="flex items-end gap-0.5 h-4 px-2 py-0.5 rounded-full bg-black/40 backdrop-blur-md border border-white/10">
+                        <span className="w-0.5 h-2.5 bg-[#f3cbc4] rounded-full animate-pulse" />
+                        <span className="w-0.5 h-3.5 bg-white/90 rounded-full animate-bounce delay-75" />
+                        <span className="w-0.5 h-1.5 bg-[#f3cbc4] rounded-full animate-pulse delay-150" />
+                        <span className="w-0.5 h-3.5 bg-white/90 rounded-full animate-bounce delay-100" />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Track Title, Artist & Like Info */}
+              <div className="w-full max-w-[340px] mx-auto flex items-center justify-between px-2 py-2">
+                <div className="min-w-0 pr-3">
+                  <h3 className="text-base font-bold text-white truncate drop-shadow-sm">
+                    {currentTrack?.title || 'No track selected'}
+                  </h3>
+                  <p className="text-xs text-neutral-400 truncate mt-0.5">
+                    {artistName} • <span className="text-neutral-500 uppercase tracking-wider">{albumTitle}</span>
+                  </p>
+                </div>
+
+                <button
+                  onClick={() => currentTrack && toggleLike(currentTrack.id)}
+                  className={`p-2 rounded-full hover:bg-white/10 active:scale-90 transition ${
+                    isLiked ? 'text-red-500 fill-red-500' : 'text-neutral-400 hover:text-white'
+                  }`}
+                  title={isLiked ? 'Unlike' : 'Like'}
+                >
+                  <Heart size={20} className={isLiked ? 'fill-red-500 text-red-500' : ''} />
+                </button>
+              </div>
+
+              {/* Scrubber Timeline & Playback Controls on Mobile */}
+              <div className="w-full max-w-[340px] mx-auto flex flex-col gap-2.5 pb-2">
+                {/* Timeline Scrubber */}
+                <div className="flex flex-col gap-1">
+                  <div
+                    ref={mobileScrubberRef}
+                    onClick={handleMobileScrubberClick}
+                    onTouchStart={handleMobileScrubberTouch}
+                    onTouchMove={handleMobileScrubberTouch}
+                    className="w-full h-4 flex items-center cursor-pointer group"
+                  >
+                    <div className="w-full h-1.5 bg-white/20 rounded-full relative overflow-hidden">
+                      <div
+                        className="h-full bg-white group-hover:bg-[#EAA599] rounded-full transition-all"
+                        style={{ width: `${progressPercent}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between text-[11px] text-neutral-400 tabular-nums px-0.5">
+                    <span>{formatTime(currentTime)}</span>
+                    <span>{formatTime(duration)}</span>
+                  </div>
+                </div>
+
+                {/* Main Playback Buttons */}
+                <div className="flex items-center justify-between px-2 pt-1">
+                  <button
+                    onClick={toggleShuffle}
+                    className={`p-2 transition active:scale-95 ${
+                      isShuffle ? 'text-[#EAA599]' : 'text-neutral-400 hover:text-white'
+                    }`}
+                    title="Shuffle"
+                  >
+                    <Shuffle size={18} />
+                  </button>
+
+                  <button
+                    onClick={previousTrack}
+                    className="p-2 text-neutral-200 hover:text-white transition active:scale-95"
+                    title="Previous"
+                  >
+                    <SkipBack size={22} />
+                  </button>
+
+                  <button
+                    onClick={togglePlay}
+                    className="w-13 h-13 rounded-full bg-white text-black flex items-center justify-center shadow-xl active:scale-90 transition transform"
+                    title={isPlaying ? 'Pause' : 'Play'}
+                  >
+                    {isPlaying ? (
+                      <Pause size={22} className="fill-black text-black" />
+                    ) : (
+                      <Play size={22} className="fill-black text-black ml-0.5" />
+                    )}
+                  </button>
+
+                  <button
+                    onClick={nextTrack}
+                    className="p-2 text-neutral-200 hover:text-white transition active:scale-95"
+                    title="Next"
+                  >
+                    <SkipForward size={22} />
+                  </button>
+
+                  <button
+                    onClick={toggleRepeat}
+                    className={`p-2 transition active:scale-95 ${
+                      repeatMode !== 'off' ? 'text-[#EAA599]' : 'text-neutral-400 hover:text-white'
+                    }`}
+                    title={`Repeat: ${repeatMode}`}
+                  >
+                    {repeatMode === 'one' ? <Repeat1 size={18} /> : <Repeat size={18} />}
+                  </button>
+                </div>
+
+                {/* Mobile Volume Slider */}
+                <div className="flex items-center gap-2.5 px-3 pt-1">
+                  <button
+                    onClick={toggleMute}
+                    className="text-neutral-400 hover:text-white transition flex-shrink-0"
+                    title={isMuted ? 'Unmute' : 'Mute'}
+                  >
+                    {isMuted || volume === 0 ? <VolumeX size={16} /> : <Volume2 size={16} />}
+                  </button>
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    value={isMuted ? 0 : Math.round(volume * 100)}
+                    onChange={(e) => setVolume(parseFloat(e.target.value) / 100)}
+                    className="w-full h-1 bg-white/20 accent-[#EAA599] rounded-lg cursor-pointer"
+                  />
+                </div>
+              </div>
+
+            </div>
+          ) : (
+            /* MOBILE TAB 2: MUSICS / QUEUE VIEW */
+            <div className="flex-1 flex flex-col overflow-hidden bg-[#0c0d10]/95">
+              
+              <div className="p-4 flex-1 overflow-y-auto custom-scrollbar">
+                {/* Header: PLAYING FROM */}
+                <div className="mb-2">
+                  <span className="text-[10px] font-bold tracking-widest text-neutral-400 uppercase">
+                    Playing From: {albumTitle}
+                  </span>
+                </div>
+
+                {/* Active Track Card on Mobile */}
+                {currentTrack && (
+                  <div 
+                    onClick={() => setMobileTab('player')}
+                    className="flex items-center justify-between p-3 rounded-xl bg-white/10 border border-[#EAA599]/30 shadow-sm mb-4 cursor-pointer active:scale-98 transition"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <img
+                        src={getTrackCover(currentTrack.coverUrl)}
+                        alt={currentTrack.title}
+                        className="w-12 h-12 rounded-lg object-cover flex-shrink-0 shadow-md"
+                      />
+                      <div className="min-w-0 pr-2">
+                        <div className="flex items-center gap-1.5">
+                          <h4 className="text-sm font-bold text-[#EAA599] truncate">
+                            {currentTrack.title}
+                          </h4>
+                          {isPlaying && (
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#EAA599] animate-ping flex-shrink-0" />
+                          )}
+                        </div>
+                        <p className="text-xs text-neutral-400 truncate mt-0.5">
+                          {currentTrack.artist}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        togglePlay();
+                      }}
+                      className="w-9 h-9 rounded-full bg-white/15 text-white flex items-center justify-center flex-shrink-0 cursor-pointer active:scale-90 transition"
+                    >
+                      {isPlaying ? (
+                        <Pause size={16} className="fill-current" />
+                      ) : (
+                        <Play size={16} className="fill-current ml-0.5" />
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Header: NEXT UP */}
+                <div className="mb-2.5 flex items-center justify-between">
+                  <span className="text-[10px] font-bold tracking-widest text-neutral-400 uppercase">
+                    Next Up From: {albumTitle}
+                  </span>
+                  <span className="text-[11px] text-neutral-500 font-medium">
+                    {nextUpTracks.length} tracks
+                  </span>
+                </div>
+
+                {/* Track List */}
+                <div className="space-y-1 pb-16">
+                  {nextUpTracks.length === 0 ? (
+                    <div className="text-center py-12 text-xs text-neutral-500">
+                      No other tracks in this album
+                    </div>
+                  ) : (
+                    nextUpTracks.map((track) => (
+                      <div
+                        key={track.id}
+                        onClick={() => playTrack(track)}
+                        className="flex items-center justify-between p-2.5 rounded-xl hover:bg-white/5 active:bg-white/10 transition cursor-pointer"
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <img
+                            src={getTrackCover(track.coverUrl)}
+                            alt={track.title}
+                            className="w-10 h-10 rounded-lg object-cover flex-shrink-0 bg-neutral-800"
+                          />
+                          <div className="min-w-0 pr-2">
+                            <span className="text-sm font-medium text-white truncate block">
+                              {track.title}
+                            </span>
+                            <span className="text-xs text-neutral-400 truncate block mt-0.5">
+                              {track.artist}
+                            </span>
+                          </div>
+                        </div>
+
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removeFromQueue(track.id);
+                          }}
+                          className="w-8 h-8 rounded-full flex items-center justify-center text-neutral-400 hover:text-white transition"
+                          title="Remove from queue"
+                        >
+                          <X size={15} />
+                        </button>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+
+              {/* Mobile Sticky Mini-Player Bar at bottom of Queue view */}
+              <div className="relative h-16 px-4 border-t border-white/10 bg-[#090a0d] flex items-center justify-between gap-3 select-none flex-shrink-0">
+                {/* Thin progress line at top of mini bar */}
+                <div className="absolute top-0 left-0 right-0 h-0.5 bg-white/10">
+                  <div
+                    className="h-full bg-[#EAA599] transition-all"
+                    style={{ width: `${progressPercent}%` }}
+                  />
+                </div>
+
+                <div
+                  onClick={() => setMobileTab('player')}
+                  className="flex items-center gap-2.5 min-w-0 flex-1 cursor-pointer"
+                >
+                  <img
+                    src={displayCover}
+                    alt={currentTrack?.title || 'Mini Player'}
+                    className="w-10 h-10 rounded-lg object-cover flex-shrink-0"
+                  />
+                  <div className="min-w-0 pr-2">
+                    <p className="text-xs font-bold text-white truncate">
+                      {currentTrack?.title || 'No track selected'}
+                    </p>
+                    <p className="text-[11px] text-neutral-400 truncate">
+                      {artistName}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <button
+                    onClick={previousTrack}
+                    className="p-1.5 text-neutral-300 hover:text-white transition active:scale-95"
+                  >
+                    <SkipBack size={18} />
+                  </button>
+
+                  <button
+                    onClick={togglePlay}
+                    className="w-9 h-9 rounded-full bg-white text-black flex items-center justify-center shadow-md active:scale-90 transition"
+                  >
+                    {isPlaying ? (
+                      <Pause size={16} className="fill-black text-black" />
+                    ) : (
+                      <Play size={16} className="fill-black text-black ml-0.5" />
+                    )}
+                  </button>
+
+                  <button
+                    onClick={nextTrack}
+                    className="p-1.5 text-neutral-300 hover:text-white transition active:scale-95"
+                  >
+                    <SkipForward size={18} />
+                  </button>
+                </div>
+              </div>
+
+            </div>
+          )}
+        </div>
+
+        {/* ============================================================== */}
+        {/* DESKTOP BOTTOM PLAYBACK BAR (MATCHES REFERENCE BOTTOM DECK)    */}
+        {/* ============================================================== */}
+        <footer className="hidden md:flex h-20 sm:h-22 px-4 sm:px-6 border-t border-white/5 bg-[#090a0d]/95 items-center justify-between gap-3 select-none flex-shrink-0">
           
           {/* LEFT: Current Track Details, Like & Options */}
           <div className="w-[28%] min-w-[140px] flex items-center gap-3">
@@ -410,7 +824,7 @@ export const MinimalistPlayer: React.FC<MinimalistPlayerProps> = ({
                 <SkipBack size={18} />
               </button>
 
-              {/* Play / Pause (Solid White Triangle/Bars like Reference) */}
+              {/* Play / Pause */}
               <button
                 onClick={togglePlay}
                 className="w-10 h-10 rounded-full bg-white text-black flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition"

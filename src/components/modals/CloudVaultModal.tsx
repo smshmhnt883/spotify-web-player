@@ -40,7 +40,7 @@ export const CloudVaultModal: React.FC<CloudVaultModalProps> = ({ isOpen, onClos
 
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
-      <div className="bg-[#181818] border border-white/10 rounded-2xl p-6 w-full max-w-lg shadow-2xl flex flex-col gap-5 select-none animate-in fade-in zoom-in-95 duration-200">
+      <div className="bg-[#181818] border border-white/10 rounded-2xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl flex flex-col gap-5 select-none animate-in fade-in zoom-in-95 duration-200">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
