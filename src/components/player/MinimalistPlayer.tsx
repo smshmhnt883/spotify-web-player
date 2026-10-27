@@ -15,7 +15,6 @@ import {
   X,
   ChevronDown,
   Cloud,
-  Upload,
   Maximize2,
   Minimize2
 } from 'lucide-react';
@@ -26,13 +25,11 @@ import type { Track } from '../../types';
 
 interface MinimalistPlayerProps {
   onToggleAlbumsSlideBar: () => void;
-  onOpenUploadModal: () => void;
   onOpenCloudVaultModal: () => void;
 }
 
 export const MinimalistPlayer: React.FC<MinimalistPlayerProps> = ({
   onToggleAlbumsSlideBar,
-  onOpenUploadModal,
   onOpenCloudVaultModal
 }) => {
   const {
@@ -130,47 +127,37 @@ export const MinimalistPlayer: React.FC<MinimalistPlayerProps> = ({
               className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-neutral-200 hover:text-white transition group border border-white/5 shadow-sm active:scale-95"
               title="Open Albums Slide Bar"
             >
-              <Menu size={16} className="text-[#2dd4bf] group-hover:scale-110 transition-transform" />
+              <Menu size={16} className="text-white group-hover:text-[#EAA599] group-hover:scale-110 transition-all" />
               <span className="text-xs font-bold tracking-wider uppercase text-white">
                 Albums
               </span>
             </button>
 
-            {/* Audio-Reactive Beat Indicator */}
+            {/* Audio-Reactive Beat Indicator (Harmonized Pastel Rose Accent) */}
             {isPlaying && (
-              <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#2dd4bf]/10 border border-[#2dd4bf]/25 text-[#2dd4bf] text-[10px] font-semibold tracking-wider">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#2dd4bf] animate-ping inline-block" />
+              <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#EAA599]/10 border border-[#EAA599]/25 text-[#EAA599] text-[10px] font-semibold tracking-wider">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#EAA599] animate-ping inline-block" />
                 <span>BEAT REACTIVE</span>
               </div>
             )}
           </div>
 
-          {/* Right: Cloud Vault & Utility Badges */}
+          {/* Right: Cloud Vault & Fullscreen */}
           <div className="flex items-center gap-2 sm:gap-3">
-            {/* Cloud Vault Connection Button */}
+            {/* Cloud Vault Connection Button (Frosted Minimalist Styling) */}
             <button
               onClick={onOpenCloudVaultModal}
               className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border transition ${
                 isCloudSynced
-                  ? 'bg-[#2dd4bf]/10 border-[#2dd4bf]/30 text-[#2dd4bf]'
+                  ? 'bg-white/10 border-white/20 text-white hover:bg-white/15'
                   : 'bg-white/5 border-white/10 text-neutral-400 hover:text-white'
               }`}
               title="Cloudflare R2 Vault Settings"
             >
-              <Cloud size={13} className={isCloudSynced ? 'text-[#2dd4bf]' : ''} />
+              <Cloud size={13} className={isCloudSynced ? 'text-[#EAA599]' : ''} />
               <span className="hidden md:inline">
                 {isCloudSynced ? 'Vault Online' : 'Connect Vault'}
               </span>
-            </button>
-
-            {/* Upload Button */}
-            <button
-              onClick={onOpenUploadModal}
-              className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-white/5 hover:bg-white/10 text-neutral-300 hover:text-white transition border border-white/5"
-              title="Upload Local Music"
-            >
-              <Upload size={12} />
-              <span className="hidden sm:inline">Upload</span>
             </button>
 
             {/* Fullscreen Toggle */}
@@ -203,7 +190,7 @@ export const MinimalistPlayer: React.FC<MinimalistPlayerProps> = ({
 
               {/* Artwork Top Header: Geometric Logo & Album Title */}
               <div className="relative z-10 flex items-center justify-between w-full">
-                {/* Geometric Logo (Tidal/VaultX Motif with pastel blush & cyan accents) */}
+                {/* Geometric Logo (Tidal/VaultX Motif with pastel blush & warm white accents) */}
                 <div
                   onClick={onToggleAlbumsSlideBar}
                   className="w-9 h-9 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center cursor-pointer hover:scale-110 active:scale-95 transition text-white border border-white/20 shadow-lg"
@@ -211,8 +198,8 @@ export const MinimalistPlayer: React.FC<MinimalistPlayerProps> = ({
                 >
                   <div className="grid grid-cols-2 gap-0.5">
                     <span className="w-1.5 h-1.5 bg-[#f3cbc4] rounded-full" />
-                    <span className="w-1.5 h-1.5 bg-[#2dd4bf] rounded-full" />
-                    <span className="w-1.5 h-1.5 bg-[#2dd4bf] rounded-full" />
+                    <span className="w-1.5 h-1.5 bg-white rounded-full" />
+                    <span className="w-1.5 h-1.5 bg-white rounded-full" />
                     <span className="w-1.5 h-1.5 bg-[#f3cbc4] rounded-full" />
                   </div>
                 </div>
@@ -243,13 +230,13 @@ export const MinimalistPlayer: React.FC<MinimalistPlayerProps> = ({
                   {artistName}
                 </span>
 
-                {/* Pulsing Audio Wave Indicator (Pink & Teal accents) */}
+                {/* Pulsing Audio Wave Indicator (Pink & Ivory accents) */}
                 {isPlaying && (
                   <div className="flex items-end gap-0.5 h-5 px-2 py-1 rounded-full bg-black/40 backdrop-blur-md border border-white/10">
                     <span className="w-0.5 h-3 bg-[#f3cbc4] rounded-full animate-pulse" />
-                    <span className="w-0.5 h-4 bg-[#2dd4bf] rounded-full animate-bounce delay-75" />
+                    <span className="w-0.5 h-4 bg-white/90 rounded-full animate-bounce delay-75" />
                     <span className="w-0.5 h-2 bg-[#f3cbc4] rounded-full animate-pulse delay-150" />
-                    <span className="w-0.5 h-4 bg-[#2dd4bf] rounded-full animate-bounce delay-100" />
+                    <span className="w-0.5 h-4 bg-white/90 rounded-full animate-bounce delay-100" />
                   </div>
                 )}
               </div>
@@ -276,7 +263,7 @@ export const MinimalistPlayer: React.FC<MinimalistPlayerProps> = ({
                     className="w-11 h-11 rounded-lg object-cover flex-shrink-0 shadow-md"
                   />
                   <div className="min-w-0 pr-2">
-                    <h4 className="text-sm font-bold text-[#2dd4bf] truncate">
+                    <h4 className="text-sm font-bold text-[#EAA599] truncate">
                       {currentTrack.title}
                     </h4>
                     <p className="text-xs text-neutral-400 truncate mt-0.5">
@@ -287,7 +274,7 @@ export const MinimalistPlayer: React.FC<MinimalistPlayerProps> = ({
 
                 <div
                   onClick={togglePlay}
-                  className="w-8 h-8 rounded-full bg-[#2dd4bf]/20 hover:bg-[#2dd4bf] text-[#2dd4bf] hover:text-black flex items-center justify-center flex-shrink-0 cursor-pointer transition"
+                  className="w-8 h-8 rounded-full bg-white/10 hover:bg-[#EAA599] text-white hover:text-black flex items-center justify-center flex-shrink-0 cursor-pointer transition"
                   title={isPlaying ? 'Pause' : 'Play'}
                 >
                   {isPlaying ? (
@@ -407,7 +394,7 @@ export const MinimalistPlayer: React.FC<MinimalistPlayerProps> = ({
               <button
                 onClick={toggleShuffle}
                 className={`transition hover:scale-110 ${
-                  isShuffle ? 'text-[#2dd4bf]' : 'text-neutral-400 hover:text-white'
+                  isShuffle ? 'text-[#EAA599]' : 'text-neutral-400 hover:text-white'
                 }`}
                 title={isShuffle ? 'Shuffle On' : 'Shuffle Off'}
               >
@@ -449,7 +436,7 @@ export const MinimalistPlayer: React.FC<MinimalistPlayerProps> = ({
               <button
                 onClick={toggleRepeat}
                 className={`transition hover:scale-110 ${
-                  repeatMode !== 'off' ? 'text-[#2dd4bf]' : 'text-neutral-400 hover:text-white'
+                  repeatMode !== 'off' ? 'text-[#EAA599]' : 'text-neutral-400 hover:text-white'
                 }`}
                 title={`Repeat: ${repeatMode}`}
               >
@@ -467,7 +454,7 @@ export const MinimalistPlayer: React.FC<MinimalistPlayerProps> = ({
                 className="flex-1 h-1.5 bg-white/20 rounded-full relative cursor-pointer group flex items-center"
               >
                 <div
-                  className="h-full bg-white group-hover:bg-[#2dd4bf] rounded-full relative transition-all"
+                  className="h-full bg-white group-hover:bg-[#EAA599] rounded-full relative transition-all"
                   style={{ width: `${progressPercent}%` }}
                 >
                   <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -501,7 +488,7 @@ export const MinimalistPlayer: React.FC<MinimalistPlayerProps> = ({
                   max="100"
                   value={isMuted ? 0 : Math.round(volume * 100)}
                   onChange={(e) => setVolume(parseFloat(e.target.value) / 100)}
-                  className="w-full h-1 bg-white/20 accent-[#2dd4bf] rounded-lg cursor-pointer"
+                  className="w-full h-1 bg-white/20 accent-[#EAA599] rounded-lg cursor-pointer"
                 />
               </div>
             </div>

@@ -28,7 +28,6 @@ export const App: React.FC = () => {
       {/* 2. Main Minimalist One-Home-Page Player (Matches Reference Screenshot) */}
       <MinimalistPlayer
         onToggleAlbumsSlideBar={() => setIsAlbumsSlideBarOpen(!isAlbumsSlideBarOpen)}
-        onOpenUploadModal={() => setIsUploadModalOpen(true)}
         onOpenCloudVaultModal={() => setIsCloudVaultModalOpen(true)}
       />
 
@@ -36,7 +35,6 @@ export const App: React.FC = () => {
       <AlbumsSlideBar
         isOpen={isAlbumsSlideBarOpen}
         onClose={() => setIsAlbumsSlideBarOpen(false)}
-        onOpenUploadModal={() => setIsUploadModalOpen(true)}
         onOpenCloudVaultModal={() => setIsCloudVaultModalOpen(true)}
       />
 
