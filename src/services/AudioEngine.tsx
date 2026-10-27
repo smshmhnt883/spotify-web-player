@@ -142,8 +142,8 @@ export const AudioEngine: React.FC = () => {
   // Global Keyboard Shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Ignore if user is typing in an input
-      if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement).tagName)) {
+      // Let native controls and dialogs handle their own keyboard interactions.
+      if ((e.target as HTMLElement).closest('input, textarea, select, button, a, [contenteditable="true"], [role="dialog"], dialog') || document.querySelector('[aria-modal="true"]')) {
         return;
       }
 

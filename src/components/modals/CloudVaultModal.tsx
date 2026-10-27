@@ -1,202 +1,87 @@
-import React, { useState } from 'react';
-import { X, Cloud, Zap, CheckCircle2, AlertCircle, RefreshCw, ExternalLink, Copy, Check } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { X, Cloud, ArrowUpRight, CheckCircle2, AlertCircle, RefreshCw, Copy, Check, ChevronDown } from 'lucide-react';
 import { usePlayerStore } from '../../store/usePlayerStore';
+import './vault-modals.css';
 
-interface CloudVaultModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-}
+interface CloudVaultModalProps { isOpen: boolean; onClose: () => void; }
 
 export const CloudVaultModal: React.FC<CloudVaultModalProps> = ({ isOpen, onClose }) => {
-  const {
-    isCloudSynced,
-    cloudSyncStatus,
-    cloudSyncMessage,
-    cloudTrackCount,
-    workerApiUrl,
-    setWorkerApiUrl,
-    syncCloudLibrary,
-    cloudVaultUrl
-  } = usePlayerStore();
-
+  const cloudSyncStatus = usePlayerStore(state => state.cloudSyncStatus);
+  const cloudSyncMessage = usePlayerStore(state => state.cloudSyncMessage);
+  const cloudTrackCount = usePlayerStore(state => state.cloudTrackCount);
+  const workerApiUrl = usePlayerStore(state => state.workerApiUrl);
+  const setWorkerApiUrl = usePlayerStore(state => state.setWorkerApiUrl);
+  const syncCloudLibrary = usePlayerStore(state => state.syncCloudLibrary);
   const [inputUrl, setInputUrl] = useState(workerApiUrl);
-  const [copied, setCopied] = useState(false);
+  const [copyStatus, setCopyStatus] = useState('');
   const [showGuide, setShowGuide] = useState(false);
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const syncing = cloudSyncStatus === 'syncing';
 
-  if (!isOpen) return null;
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (isOpen) {
+      setInputUrl(usePlayerStore.getState().workerApiUrl);
+      setCopyStatus('');
+      if (!dialog?.open) dialog?.showModal();
+    } else if (dialog?.open) dialog.close();
+  }, [isOpen]);
 
-  const handleSync = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
+  const handleSync = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (syncing) return;
     setWorkerApiUrl(inputUrl);
     await syncCloudLibrary(inputUrl);
   };
 
-  const handleCopyGuide = () => {
-    const guideText = `VaultX Music - Cloudflare Worker Setup (Method 2)\n1. Go to dash.cloudflare.com -> Workers & Pages -> Create Worker named "vaultx-music-api"\n2. In Settings -> Bindings -> Add R2 Bucket Binding: Variable name MY_BUCKET, Bucket: my-music-vault\n3. In Edit Code, paste worker.js and click Deploy\n4. Copy your Worker URL and paste it into VaultX Music!`;
-    navigator.clipboard.writeText(guideText);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const copyGuide = async () => {
+    try {
+      await navigator.clipboard.writeText('VaultX cloud setup\n1. Create a Cloudflare Worker.\n2. Add an R2 bucket binding named MY_BUCKET to your music bucket.\n3. Deploy the code in cloudflare-worker/worker.js.\n4. Paste the Worker URL into VaultX and choose Save & sync.');
+      setCopyStatus('Steps copied');
+    } catch {
+      setCopyStatus('Copy unavailable. You can select the steps below.');
+    }
   };
 
+  const statusTitle = syncing ? 'Finding your music…' : cloudSyncStatus === 'success' ? 'Your vault is connected' : cloudSyncStatus === 'error' ? 'We couldn’t sync your vault' : 'Bring your collection with you';
+
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
-      <div className="bg-[#181818] border border-white/10 rounded-2xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl flex flex-col gap-5 select-none animate-in fade-in zoom-in-95 duration-200">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-full bg-spotify-green/20 flex items-center justify-center text-spotify-green">
-              <Cloud size={20} />
-            </div>
-            <div>
-              <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                Cloudflare Vault Connection
-              </h2>
-              <p className="text-xs text-spotify-subdued">Stream your personal music library from anywhere</p>
-            </div>
+    <dialog ref={dialogRef} className="vx-dialog vx-cloud-dialog" aria-labelledby="vault-dialog-title" onKeyDown={event => event.stopPropagation()}
+      onCancel={event => { event.preventDefault(); onClose(); }}
+      onClick={event => { if (event.target === event.currentTarget) onClose(); }}>
+      <section className="vx-dialog-surface">
+        <header className="vx-dialog-header">
+          <span className="vx-modal-eyebrow">YOUR MUSIC, EVERYWHERE</span>
+          <button className="vx-modal-icon-button" onClick={onClose} aria-label="Close cloud settings" autoFocus><X size={20} /></button>
+        </header>
+        <div className="vx-dialog-body">
+          <div className="vx-cloud-symbol"><Cloud size={29} strokeWidth={1.4} /></div>
+          <h2 id="vault-dialog-title" className="vx-dialog-title">A home for your music.</h2>
+          <p className="vx-dialog-intro">Connect your cloud library and take your favorite sounds wherever you go.</p>
+          <div className={`vx-connection-status ${cloudSyncStatus === 'error' ? 'is-error' : ''}`} role="status" aria-live="polite">
+            {syncing ? <RefreshCw size={19} className="vx-spinning" /> : cloudSyncStatus === 'success' ? <CheckCircle2 size={19} /> : <AlertCircle size={19} />}
+            <div><strong>{statusTitle}</strong><p>{cloudSyncStatus === 'success' ? `${cloudTrackCount} tracks in your collection` : cloudSyncMessage || 'Connect a Cloudflare Worker or use your saved library.'}</p></div>
           </div>
-          <button
-            onClick={onClose}
-            className="text-spotify-subdued hover:text-white p-1 rounded-full hover:bg-white/10 transition"
-          >
-            <X size={20} />
-          </button>
-        </div>
-
-        {/* Live Status Card */}
-        <div className={`p-4 rounded-xl border flex items-center justify-between ${
-          isCloudSynced
-            ? 'bg-spotify-green/10 border-spotify-green/30'
-            : cloudSyncStatus === 'error'
-            ? 'bg-red-500/10 border-red-500/30'
-            : 'bg-white/5 border-white/10'
-        }`}>
-          <div className="flex items-center gap-3">
-            {cloudSyncStatus === 'syncing' ? (
-              <RefreshCw size={22} className="text-white animate-spin" />
-            ) : isCloudSynced ? (
-              <CheckCircle2 size={22} className="text-spotify-green" />
-            ) : (
-              <AlertCircle size={22} className="text-yellow-400" />
-            )}
-            <div>
-              <div className="text-sm font-bold text-white flex items-center gap-2">
-                {isCloudSynced ? 'Vault Connected & Online' : 'Vault Not Synced'}
-                {cloudTrackCount > 0 && (
-                  <span className="text-[10px] bg-spotify-green/20 text-spotify-green px-2 py-0.5 rounded-full font-semibold">
-                    {cloudTrackCount} Songs
-                  </span>
-                )}
-              </div>
-              <p className="text-xs text-spotify-subdued">
-                {cloudSyncMessage || (isCloudSynced ? 'Ready for streaming' : 'Configure Worker or sync static R2')}
-              </p>
-            </div>
-          </div>
-
-          <button
-            onClick={() => handleSync()}
-            disabled={cloudSyncStatus === 'syncing'}
-            className="px-3 py-1.5 rounded-full text-xs font-bold bg-white/10 hover:bg-white/20 text-white flex items-center gap-1.5 transition disabled:opacity-50"
-          >
-            <RefreshCw size={13} className={cloudSyncStatus === 'syncing' ? 'animate-spin' : ''} />
-            <span>Sync</span>
-          </button>
-        </div>
-
-        {/* Method 2: Cloudflare Worker API Setup */}
-        <form onSubmit={handleSync} className="flex flex-col gap-3">
-          <div className="flex items-center justify-between">
-            <label className="text-xs font-semibold text-white flex items-center gap-1.5">
-              <Zap size={14} className="text-spotify-green" />
-              <span>Real-Time Worker API URL (Method 2)</span>
-            </label>
-            <button
-              type="button"
-              onClick={() => setShowGuide(!showGuide)}
-              className="text-[11px] text-spotify-green hover:underline flex items-center gap-1"
-            >
-              {showGuide ? 'Hide instructions' : 'Setup guide (2 mins)'}
-            </button>
-          </div>
-
-          <div className="flex gap-2">
-            <input
-              type="url"
-              value={inputUrl}
-              onChange={(e) => setInputUrl(e.target.value)}
-              placeholder="https://vaultx-music-api.<your-subdomain>.workers.dev"
-              className="flex-1 px-3 py-2 rounded-lg bg-black/40 border border-white/10 focus:border-spotify-green focus:outline-none text-xs text-white placeholder-white/30"
-            />
-            <button
-              type="submit"
-              disabled={cloudSyncStatus === 'syncing'}
-              className="px-4 py-2 rounded-lg bg-spotify-green text-black text-xs font-bold hover:scale-105 active:scale-95 transition disabled:opacity-50 shadow-md"
-            >
-              {cloudSyncStatus === 'syncing' ? 'Syncing...' : 'Save & Sync'}
-            </button>
-          </div>
-          <p className="text-[11px] text-spotify-subdued leading-relaxed">
-            With the Worker active, any song you drop into your Cloudflare R2 bucket will appear on all your devices in real-time.
-          </p>
-        </form>
-
-        {/* Guide / Instructions Dropdown */}
-        {showGuide && (
-          <div className="bg-black/50 border border-white/10 rounded-xl p-4 text-xs text-spotify-subdued flex flex-col gap-2.5 animate-in fade-in duration-200">
-            <div className="flex items-center justify-between text-white font-semibold">
-              <span>Quick Cloudflare Worker Setup</span>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={handleCopyGuide}
-                  className="text-xs text-white/70 hover:text-white flex items-center gap-1 bg-white/10 px-2 py-0.5 rounded transition"
-                >
-                  {copied ? <Check size={12} className="text-spotify-green" /> : <Copy size={12} />}
-                  <span>{copied ? 'Copied Steps!' : 'Copy Steps'}</span>
-                </button>
-                <a
-                  href="https://dash.cloudflare.com"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-spotify-green text-[11px] flex items-center gap-1 hover:underline"
-                >
-                  <span>dash.cloudflare.com</span>
-                  <ExternalLink size={12} />
-                </a>
-              </div>
-            </div>
-            <ol className="list-decimal list-inside space-y-1 text-[11px] leading-relaxed">
-              <li>Open Cloudflare Dashboard → <strong>Workers & Pages</strong> → <strong>Create application</strong> → <strong>Deploy</strong>.</li>
-              <li>Go to Worker <strong>Settings</strong> → <strong>Variables & Secrets</strong> → <strong>R2 Bucket Bindings</strong>.</li>
-              <li>Add binding: Variable name <code className="text-white bg-white/10 px-1 rounded">MY_BUCKET</code>, Bucket <code className="text-white bg-white/10 px-1 rounded">my-music-vault</code>.</li>
-              <li>Click <strong>Edit code</strong>, paste the script from <code className="text-white">cloudflare-worker/worker.js</code>, and click <strong>Deploy</strong>.</li>
-              <li>Copy your worker URL and paste it into the box above!</li>
+          <form onSubmit={handleSync} className="vx-cloud-form">
+            <label htmlFor="vault-worker-url">Cloudflare Worker URL <span>Optional</span></label>
+            <input id="vault-worker-url" type="url" value={inputUrl} onChange={event => setInputUrl(event.target.value)} placeholder="https://your-music.workers.dev" autoComplete="url" spellCheck={false} disabled={syncing} aria-describedby="vault-url-help" />
+            <p id="vault-url-help" className="vx-helper">New uploads appear when you sync. Leave this empty to use your saved library manifest.</p>
+            <button className="vx-primary-button" type="submit" disabled={syncing}>{syncing ? <><RefreshCw size={16} className="vx-spinning" />Syncing library…</> : <><RefreshCw size={16} />Save & sync library</>}</button>
+          </form>
+          <button className="vx-guide-toggle" type="button" onClick={() => setShowGuide(!showGuide)} aria-expanded={showGuide} aria-controls="vault-setup-guide">Setting up for the first time?<ChevronDown size={16} className={showGuide ? 'is-open' : ''} /></button>
+          {showGuide && <div id="vault-setup-guide" className="vx-setup-guide">
+            <ol>
+              <li>Create a Worker in your Cloudflare dashboard.</li>
+              <li>Bind your music bucket to the Worker using the name <code>MY_BUCKET</code>.</li>
+              <li>Deploy the code from <code>cloudflare-worker/worker.js</code> in this project.</li>
+              <li>Paste the Worker URL above, then save and sync.</li>
             </ol>
-          </div>
-        )}
-
-        {/* Static Fallback Info */}
-        <div className="pt-2 border-t border-white/10 flex items-center justify-between text-xs text-spotify-subdued">
-          <span className="truncate max-w-[300px]">R2 Public Bucket: {cloudVaultUrl}</span>
-          <button
-            onClick={() => syncCloudLibrary()}
-            className="text-spotify-subdued hover:text-white underline text-[11px]"
-            title="Sync using static library.json fallback"
-          >
-            Use Static Manifest
-          </button>
+            <div className="vx-guide-actions"><button onClick={copyGuide} className="vx-text-button">{copyStatus === 'Steps copied' ? <Check size={15} /> : <Copy size={15} />}Copy steps</button><a href="https://dash.cloudflare.com" target="_blank" rel="noreferrer">Cloudflare dashboard<ArrowUpRight size={15} /></a></div>
+            {copyStatus && <p role="status" className="vx-helper">{copyStatus}</p>}
+          </div>}
         </div>
-
-        {/* Footer */}
-        <div className="flex justify-end gap-3 pt-1">
-          <button
-            onClick={onClose}
-            className="px-5 py-2 rounded-full text-xs font-bold bg-white text-black hover:scale-105 active:scale-95 transition"
-          >
-            Done
-          </button>
-        </div>
-      </div>
-    </div>
+        <footer className="vx-dialog-footer"><span>Cloudflare R2 · Personal library</span><button className="vx-text-button" onClick={onClose}>Done<Check size={15} /></button></footer>
+      </section>
+    </dialog>
   );
 };

@@ -1,0 +1,107 @@
+.vx-dialog {
+  --modal-ink: #f3eee7;
+  --modal-muted: #a7aaa5;
+  --modal-accent: #e8b49b;
+  width: min(540px, calc(100vw - 32px));
+  max-height: min(800px, calc(100dvh - 40px));
+  margin: auto;
+  padding: 0;
+  border: 1px solid #ffffff18;
+  border-radius: 22px;
+  color: var(--modal-ink);
+  background: #1b1c1c;
+  box-shadow: 0 32px 100px #080a09aa;
+  overflow: auto;
+}
+.vx-dialog::backdrop { background: #080a09b8; backdrop-filter: blur(12px); }
+.vx-dialog[open] { animation: vx-dialog-enter 220ms ease-out both; }
+.vx-dialog :is(button, input, a):focus-visible { outline: 2px solid var(--modal-accent); outline-offset: 4px; }
+.vx-dialog button, .vx-dialog a { -webkit-tap-highlight-color: transparent; transition: background 180ms, color 180ms, opacity 180ms; }
+.vx-dialog button:disabled { cursor: wait; opacity: .55; }
+.vx-dialog-header { display: flex; align-items: center; justify-content: space-between; padding: 20px 24px 0; }
+.vx-modal-eyebrow { font-size: 10px; letter-spacing: .16em; font-weight: 600; color: var(--modal-muted); }
+.vx-modal-icon-button { width: 44px; height: 44px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; color: var(--modal-muted); }
+.vx-modal-icon-button:hover { color: var(--modal-ink); background: #ffffff08; }
+.vx-dialog-body { padding: 2px 32px 24px; }
+.vx-cloud-symbol { width: 62px; height: 62px; border: 1px solid #e8b49b30; border-radius: 18px; color: var(--modal-accent); display: grid; place-items: center; margin: 12px 0 23px; background: #e8b49b08; }
+.vx-dialog-title { font-size: 30px; font-weight: 500; letter-spacing: -.045em; line-height: 1.18; text-wrap: balance; }
+.vx-dialog-intro { color: var(--modal-muted); font-size: 14px; line-height: 1.7; margin: 12px 0 25px; max-width: 360px; }
+.vx-connection-status { display: flex; align-items: center; gap: 13px; padding: 16px; border-radius: 12px; background: #e8b49b09; color: var(--modal-accent); margin-bottom: 28px; border: 1px solid #e8b49b18; }
+.vx-connection-status > svg { flex-shrink: 0; }
+.vx-connection-status strong { font-size: 13px; font-weight: 500; }
+.vx-connection-status p { font-size: 12px; color: var(--modal-muted); line-height: 1.5; margin: 4px 0 0; }
+.vx-connection-status.is-error { color: #efb9a9; border-color: #efb9a933; }
+.vx-cloud-form label { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 10px; }
+.vx-cloud-form label span { font-size: 12px; color: var(--modal-muted); }
+.vx-cloud-form input { width: 100%; border: 1px solid #ffffff1c; border-radius: 9px; padding: 14px; color: var(--modal-ink); background: #141515; font-size: 13px; user-select: text; }
+.vx-cloud-form input::placeholder { color: #858a84; }
+.vx-helper { font-size: 12px; line-height: 1.65; color: var(--modal-muted); }
+.vx-cloud-form > .vx-helper { margin: 10px 0 20px; }
+.vx-primary-button { display: flex; align-items: center; justify-content: center; gap: 10px; border-radius: 10px; background: var(--modal-accent); color: #241e1b; width: 100%; min-height: 48px; font-size: 13px; font-weight: 600; }
+.vx-primary-button:hover { background: #f2c4ad; }
+.vx-guide-toggle { display: flex; justify-content: space-between; align-items: center; gap: 10px; text-align: left; color: var(--modal-muted); font-size: 12px; min-height: 48px; width: 100%; margin-top: 14px; }
+.vx-guide-toggle:hover { color: var(--modal-ink); }
+.vx-guide-toggle svg { transition: transform 200ms; }
+.vx-guide-toggle svg.is-open { transform: rotate(180deg); }
+.vx-setup-guide { padding: 16px; background: #141515; border-radius: 10px; user-select: text; }
+.vx-setup-guide ol { list-style: decimal; margin: 0 0 10px 18px; padding: 0; }
+.vx-setup-guide li { font-size: 12px; color: var(--modal-muted); line-height: 1.8; padding-left: 3px; margin-bottom: 7px; }
+.vx-setup-guide code { color: var(--modal-ink); overflow-wrap: anywhere; }
+.vx-guide-actions { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.vx-guide-actions a { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; color: var(--modal-accent); min-height: 44px; }
+.vx-text-button { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; color: var(--modal-accent); font-size: 12px; font-weight: 500; }
+.vx-text-button:hover, .vx-guide-actions a:hover { color: var(--modal-ink); }
+.vx-dialog-footer { display: flex; align-items: center; justify-content: space-between; padding: 10px 32px; border-top: 1px solid #ffffff0d; gap: 16px; font-size: 11px; color: var(--modal-muted); }
+.vx-spinning { animation: vx-spin 1.5s linear infinite; }
+.vx-modal-track-heading { display: flex; align-items: center; gap: 16px; padding: 12px 30px 28px; }
+.vx-modal-track-heading img { width: 68px; height: 68px; border-radius: 9px; object-fit: cover; flex-shrink: 0; }
+.vx-modal-track-heading > div { min-width: 0; }
+.vx-modal-track-heading h2 { font-size: 24px; font-weight: 500; line-height: 1.25; letter-spacing: -.04em; overflow-wrap: anywhere; }
+.vx-modal-track-heading p { font-size: 13px; color: var(--modal-muted); margin-top: 6px; }
+.vx-modal-tabs { display: flex; padding: 0 30px; border-bottom: 1px solid #ffffff0d; gap: 26px; }
+.vx-modal-tabs button { min-height: 47px; color: var(--modal-muted); border-bottom: 2px solid transparent; font-size: 13px; white-space: nowrap; }
+.vx-modal-tabs button:hover { color: var(--modal-ink); }
+.vx-modal-tabs button.is-active { color: var(--modal-accent); border-color: var(--modal-accent); }
+.vx-track-content { min-height: 300px; }
+.vx-lyrics { position: relative; max-height: 340px; height: 340px; padding: 26px 30px; overflow-y: auto; scroll-padding: 60px; }
+.vx-lyrics > button { display: block; text-align: left; width: 100%; font-size: 23px; letter-spacing: -.025em; font-weight: 500; color: #a0a29d; padding: 12px 0; line-height: 1.45; border-radius: 4px; }
+.vx-lyrics > button.is-active { color: var(--modal-accent); }
+.vx-lyrics > button:hover { color: var(--modal-ink); }
+.vx-modal-empty-state { min-height: 270px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+.vx-modal-empty-state svg { color: var(--modal-accent); margin-bottom: 18px; }
+.vx-modal-empty-state h3, .vx-ambience h3 { font-size: 19px; font-weight: 500; letter-spacing: -.02em; }
+.vx-modal-empty-state p, .vx-ambience p { font-size: 13px; color: var(--modal-muted); margin-top: 9px; }
+.vx-track-details { padding: 10px 30px 24px; }
+.vx-track-details dl { margin: 0; }
+.vx-track-details dl > div { display: grid; grid-template-columns: 100px 1fr; gap: 15px; padding: 13px 0; border-bottom: 1px solid #ffffff0a; font-size: 13px; }
+.vx-track-details dt { color: var(--modal-muted); }
+.vx-track-details dd { margin: 0; text-align: right; overflow-wrap: anywhere; }
+.vx-audio-source { padding-top: 20px; }
+.vx-audio-source > p { font-size: 13px; margin: 8px 0; overflow-wrap: anywhere; }
+.vx-audio-source input { display: block; width: 100%; color: var(--modal-muted); font-size: 12px; padding: 10px; border-radius: 6px; background: #141515; border: 1px solid #ffffff0a; margin-bottom: 3px; }
+.vx-playback-time { font-variant-numeric: tabular-nums; color: var(--modal-ink); }
+.vx-playback-time > span { color: var(--modal-muted); }
+.vx-ambience { text-align: center; padding: 24px 30px; }
+.vx-ambience > .vx-helper { display: block; margin-top: 20px; }
+.vx-ambient-bars { display: flex; align-items: center; justify-content: center; gap: 5px; height: 150px; margin-bottom: 25px; overflow: hidden; }
+.vx-ambient-bars i { width: 5px; height: var(--bar-height); border-radius: 6px; background: var(--modal-accent); opacity: .65; transform: scaleY(.25); animation: vx-bar 1.8s ease-in-out var(--bar-delay) infinite alternate; animation-play-state: paused; }
+.vx-ambient-bars.is-playing i { animation-play-state: running; }
+@keyframes vx-dialog-enter { from { opacity: 0; transform: translateY(8px) scale(.985); } to { opacity: 1; transform: none; } }
+@keyframes vx-spin { to { transform: rotate(360deg); } }
+@keyframes vx-bar { from { transform: scaleY(.25); } to { transform: scaleY(1); } }
+@media (max-width: 480px) {
+  .vx-dialog { width: calc(100vw - 20px); border-radius: 17px; max-height: calc(100dvh - 24px); }
+  .vx-dialog-header { padding: 14px 17px 0; }
+  .vx-dialog-body { padding: 2px 22px 18px; }
+  .vx-dialog-title { font-size: 27px; }
+  .vx-modal-track-heading { padding: 12px 22px 24px; }
+  .vx-modal-track-heading h2 { font-size: 21px; }
+  .vx-modal-tabs { padding: 0 22px; gap: 21px; }
+  .vx-lyrics, .vx-track-details { padding-left: 22px; padding-right: 22px; }
+  .vx-dialog-footer { padding-left: 22px; padding-right: 22px; }
+  .vx-lyrics > button { font-size: 21px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .vx-dialog[open], .vx-spinning, .vx-ambient-bars i { animation: none; }
+  .vx-ambient-bars i { transform: scaleY(.6); }
+}

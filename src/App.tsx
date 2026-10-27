@@ -13,15 +13,15 @@ export const App: React.FC = () => {
   const [isCloudVaultModalOpen, setIsCloudVaultModalOpen] = useState(false);
   const [isAlbumsSlideBarOpen, setIsAlbumsSlideBarOpen] = useState(false);
 
-  const { syncCloudLibrary } = usePlayerStore();
+  const syncCloudLibrary = usePlayerStore(state => state.syncCloudLibrary);
 
   useEffect(() => {
     // Attempt to automatically sync with Cloudflare on startup
     syncCloudLibrary();
-  }, []);
+  }, [syncCloudLibrary]);
 
   return (
-    <div className="relative w-screen h-screen overflow-hidden bg-black text-white select-none">
+    <div className="vaultx-root">
       {/* 1. Headless Audio & MediaSession Service */}
       <AudioEngine />
 

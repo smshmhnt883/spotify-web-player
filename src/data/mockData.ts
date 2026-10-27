@@ -115,7 +115,7 @@ export const TRACKS: Track[] = [
 
 export const PLAYLISTS: Playlist[] = [
   {
-    id: 'playlist-cloud-vault',
+    id: 'playlist-demo-vault',
     title: "Cloud Vault Favorites",
     description: 'Personal music collection streamed directly from your Cloudflare Vault.',
     coverUrl: '/artwork.png',

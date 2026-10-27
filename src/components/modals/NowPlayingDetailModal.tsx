@@ -1,326 +1,85 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { X, Mic2, Info, Activity, Music2, Copy, Check } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { X, Music2, Copy, Check, Pause, Play } from 'lucide-react';
 import { usePlayerStore } from '../../store/usePlayerStore';
 import { formatTime } from '../../utils/formatTime';
 import { sanitizeTrack } from '../../utils/trackSanitizer';
+import './vault-modals.css';
 
-interface NowPlayingDetailModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-}
+interface NowPlayingDetailModalProps { isOpen: boolean; onClose: () => void; }
 
 export const NowPlayingDetailModal: React.FC<NowPlayingDetailModalProps> = ({ isOpen, onClose }) => {
-  const { currentTrack, isPlaying, currentTime, duration, seek } = usePlayerStore();
+  const currentTrack = usePlayerStore(state => state.currentTrack);
+  const isPlaying = usePlayerStore(state => state.isPlaying);
+  const currentTime = usePlayerStore(state => state.currentTime);
+  const duration = usePlayerStore(state => state.duration);
+  const seek = usePlayerStore(state => state.seek);
+  const togglePlay = usePlayerStore(state => state.togglePlay);
   const [activeTab, setActiveTab] = useState<'lyrics' | 'details' | 'visualizer'>('lyrics');
-  const [copied, setCopied] = useState(false);
-
-  const lyricsContainerRef = useRef<HTMLDivElement | null>(null);
-  const activeLyricRef = useRef<HTMLDivElement | null>(null);
-  const visualizerCanvasRef = useRef<HTMLCanvasElement | null>(null);
-  const animFrameRef = useRef<number | null>(null);
-
+  const [copyStatus, setCopyStatus] = useState('');
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const activeLyricRef = useRef<HTMLButtonElement>(null);
+  const lyricsContainerRef = useRef<HTMLDivElement>(null);
   const cleanTrack = currentTrack ? sanitizeTrack(currentTrack) : null;
+  const lyrics = cleanTrack?.lyrics || [];
+  const activeLyricIndex = lyrics.findIndex((line, index) => currentTime >= line.timeMs / 1000 && currentTime < (lyrics[index + 1]?.timeMs ?? Infinity) / 1000);
 
-  // Auto-scroll lyrics smoothly to center on active lyric
   useEffect(() => {
-    if (activeTab === 'lyrics' && activeLyricRef.current && lyricsContainerRef.current) {
-      activeLyricRef.current.scrollIntoView({
-        behavior: 'smooth',
-        block: 'center'
-      });
-    }
-  }, [currentTime, activeTab]);
+    const dialog = dialogRef.current;
+    if (isOpen && currentTrack) {
+      if (!dialog?.open) dialog?.showModal();
+    } else if (dialog?.open) dialog.close();
+  }, [isOpen, currentTrack]);
 
-  // Audio Visualizer Canvas Loop
+  useEffect(() => { setCopyStatus(''); }, [currentTrack?.id]);
+
   useEffect(() => {
-    if (!isOpen || activeTab !== 'visualizer') return;
+    if (!isOpen || activeTab !== 'lyrics' || !activeLyricRef.current || !lyricsContainerRef.current) return;
+    const line = activeLyricRef.current;
+    const container = lyricsContainerRef.current;
+    container.scrollTo({ top: line.offsetTop - container.clientHeight / 2 + line.clientHeight / 2, behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
+  }, [activeLyricIndex, activeTab, isOpen]);
 
-    const canvas = visualizerCanvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    let width = (canvas.width = canvas.parentElement?.clientWidth || 400);
-    let height = (canvas.height = 240);
-
-    const barCount = 36;
-    const bars: number[] = Array(barCount).fill(0.1);
-
-    const render = () => {
-      ctx.clearRect(0, 0, width, height);
-      const time = performance.now() / 1000;
-
-      // Draw frequency bars reacting to playback
-      const barWidth = width / barCount - 3;
-      for (let i = 0; i < barCount; i++) {
-        const target = isPlaying
-          ? Math.max(0.08, Math.sin(time * 3 + i * 0.35) * 0.45 + Math.cos(time * 2 + i * 0.15) * 0.35 + 0.25)
-          : 0.08;
-        bars[i] += (target - bars[i]) * 0.2;
-
-        const barHeight = Math.max(6, bars[i] * height * 0.85);
-        const x = i * (barWidth + 3);
-        const y = height - barHeight;
-
-        // Gradient styling in warm pastel rose to cream
-        const gradient = ctx.createLinearGradient(0, y, 0, height);
-        gradient.addColorStop(0, '#f3cbc4');
-        gradient.addColorStop(0.5, '#EAA599');
-        gradient.addColorStop(1, 'rgba(234, 165, 153, 0.2)');
-
-        ctx.fillStyle = gradient;
-        ctx.beginPath();
-        ctx.roundRect(x, y, barWidth, barHeight, [4, 4, 0, 0]);
-        ctx.fill();
-
-        // Little glowing cap
-        if (isPlaying && bars[i] > 0.4) {
-          ctx.fillStyle = '#ffffff';
-          ctx.beginPath();
-          ctx.arc(x + barWidth / 2, y + 2, 1.5, 0, Math.PI * 2);
-          ctx.fill();
-        }
-      }
-
-      animFrameRef.current = requestAnimationFrame(render);
-    };
-
-    render();
-
-    return () => {
-      if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
-    };
-  }, [isOpen, activeTab, isPlaying]);
-
-  // Close on Escape key
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen) onClose();
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
-
-  if (!isOpen || !cleanTrack) return null;
-
-  const lyrics = cleanTrack.lyrics || [];
-  const currentLyricIndex = lyrics.findIndex((line, index) => {
-    const nextLine = lyrics[index + 1];
-    const lineTime = line.timeMs / 1000;
-    const nextLineTime = nextLine ? nextLine.timeMs / 1000 : Infinity;
-    return currentTime >= lineTime && currentTime < nextLineTime;
-  });
-
-  const handleCopyLink = () => {
-    if (cleanTrack.audioUrl) {
-      navigator.clipboard.writeText(cleanTrack.audioUrl);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }
+  const copyLink = async () => {
+    if (!cleanTrack) return;
+    try {
+      await navigator.clipboard.writeText(cleanTrack.audioUrl);
+      setCopyStatus('Link copied');
+    } catch { setCopyStatus('Copy unavailable. Select the link to copy it.'); }
   };
 
+  let source = 'Local audio';
+  let format = 'Audio stream';
+  if (cleanTrack) {
+    try {
+      const url = new URL(cleanTrack.audioUrl, window.location.href);
+      source = url.protocol === 'blob:' ? 'Local audio file' : url.hostname;
+      const extension = url.pathname.match(/\.([a-z0-9]+)$/i)?.[1];
+      if (extension) format = extension.toUpperCase();
+    } catch { /* Keep generic labels when metadata is unavailable. */ }
+  }
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 select-none animate-in fade-in duration-200">
-      {/* Backdrop */}
-      <div
-        onClick={onClose}
-        className="absolute inset-0 bg-black/75 backdrop-blur-md transition-opacity"
-      />
-
-      {/* Modal Dialog */}
-      <div className="relative z-10 w-full max-w-xl max-h-[88vh] bg-[#0c0d10]/95 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9)] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
-        
-        {/* Header */}
-        <header className="h-14 px-5 border-b border-white/10 flex items-center justify-between flex-shrink-0 bg-[#090a0d]/90">
-          <div className="flex items-center gap-1.5 p-0.5 bg-white/5 border border-white/10 rounded-full">
-            <button
-              onClick={() => setActiveTab('lyrics')}
-              className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition-all ${
-                activeTab === 'lyrics'
-                  ? 'bg-white/15 text-white shadow-sm'
-                  : 'text-neutral-400 hover:text-white'
-              }`}
-            >
-              <Mic2 size={13} />
-              <span>Lyrics</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('details')}
-              className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition-all ${
-                activeTab === 'details'
-                  ? 'bg-white/15 text-white shadow-sm'
-                  : 'text-neutral-400 hover:text-white'
-              }`}
-            >
-              <Info size={13} />
-              <span>Credits</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('visualizer')}
-              className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition-all ${
-                activeTab === 'visualizer'
-                  ? 'bg-white/15 text-white shadow-sm'
-                  : 'text-neutral-400 hover:text-white'
-              }`}
-            >
-              <Activity size={13} />
-              <span>Visualizer</span>
-            </button>
+    <dialog ref={dialogRef} className="vx-dialog vx-track-dialog" aria-labelledby="track-dialog-title" onKeyDown={event => event.stopPropagation()} onCancel={event => { event.preventDefault(); onClose(); }} onClick={event => { if (event.target === event.currentTarget) onClose(); }}>
+      <section className="vx-dialog-surface">
+        <header className="vx-dialog-header"><span className="vx-modal-eyebrow">A CLOSER LISTEN</span><button className="vx-modal-icon-button" onClick={onClose} aria-label="Close track details" autoFocus><X size={20} /></button></header>
+        {cleanTrack && <>
+          <div className="vx-modal-track-heading"><img src={cleanTrack.coverUrl || './artwork.png'} alt={`${cleanTrack.album} artwork`} onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = './artwork.png'; }} /><div><h2 id="track-dialog-title">{cleanTrack.title}</h2><p>{cleanTrack.artist}</p></div></div>
+          <nav className="vx-modal-tabs" aria-label="Track information">
+            {(['lyrics', 'details', 'visualizer'] as const).map(tab => <button key={tab} className={activeTab === tab ? 'is-active' : ''} onClick={() => setActiveTab(tab)} aria-pressed={activeTab === tab}>{tab === 'visualizer' ? 'Ambience' : tab === 'details' ? 'Track details' : 'Lyrics'}</button>)}
+          </nav>
+          <div className="vx-track-content">
+            {activeTab === 'lyrics' && <div ref={lyricsContainerRef} className="vx-lyrics">
+              {lyrics.length ? lyrics.map((line, index) => <button key={`${line.timeMs}-${index}`} ref={activeLyricIndex === index ? activeLyricRef : null} className={activeLyricIndex === index ? 'is-active' : ''} aria-current={activeLyricIndex === index ? 'true' : undefined} onClick={() => seek(line.timeMs / 1000)} title={`Seek to ${formatTime(line.timeMs / 1000)}`}>{line.text}</button>) : <div className="vx-modal-empty-state"><Music2 size={28} strokeWidth={1.3} /><h3>Just the music, for now.</h3><p>Lyrics haven’t been added to this track.</p></div>}
+            </div>}
+            {activeTab === 'details' && <div className="vx-track-details">
+              <dl><div><dt>Artist</dt><dd>{cleanTrack.artist}</dd></div><div><dt>Collection</dt><dd>{cleanTrack.album || 'Personal library'}</dd></div><div><dt>Duration</dt><dd>{formatTime(duration)}</dd></div><div><dt>File format</dt><dd>{format}</dd></div>{cleanTrack.releaseYear && <div><dt>Released</dt><dd>{cleanTrack.releaseYear}</dd></div>}</dl>
+              <div className="vx-audio-source"><span className="vx-modal-eyebrow">AUDIO SOURCE</span><p>{source}</p><input readOnly value={cleanTrack.audioUrl} aria-label="Audio source URL" onFocus={event => event.currentTarget.select()} /><button className="vx-text-button" onClick={copyLink}>{copyStatus === 'Link copied' ? <Check size={15} /> : <Copy size={15} />}Copy audio link</button>{copyStatus && <p className="vx-helper" role="status">{copyStatus}</p>}</div>
+            </div>}
+            {activeTab === 'visualizer' && <div className="vx-ambience"><div className={`vx-ambient-bars ${isPlaying ? 'is-playing' : ''}`} aria-hidden="true">{Array.from({ length: 27 }, (_, index) => <i key={index} style={{ '--bar-height': `${20 + Math.sin(index * 0.8) ** 2 * 70}%`, '--bar-delay': `${index * -0.13}s` } as React.CSSProperties} />)}</div><h3>Settle into the sound.</h3><p>A little motion to accompany your music.</p><span className="vx-helper">Ambient animation · {isPlaying ? 'Playing' : 'Paused'}</span></div>}
           </div>
-
-          <button
-            onClick={onClose}
-            className="w-8 h-8 rounded-full flex items-center justify-center text-neutral-400 hover:text-white hover:bg-white/10 transition"
-            title="Close"
-          >
-            <X size={18} />
-          </button>
-        </header>
-
-        {/* Content Body */}
-        <div className="flex-1 overflow-y-auto p-5 custom-scrollbar">
-          
-          {/* TAB 1: LYRICS */}
-          {activeTab === 'lyrics' && (
-            <div ref={lyricsContainerRef} className="py-4 space-y-5 text-center">
-              {lyrics.length > 0 ? (
-                lyrics.map((line, idx) => {
-                  const isActive = idx === currentLyricIndex;
-                  return (
-                    <div
-                      key={idx}
-                      ref={isActive ? activeLyricRef : null}
-                      onClick={() => seek(line.timeMs / 1000)}
-                      className={`cursor-pointer transition-all duration-300 py-1.5 px-3 rounded-xl ${
-                        isActive
-                          ? 'text-lg sm:text-xl font-black text-[#EAA599] scale-105 drop-shadow-[0_0_12px_rgba(234,165,153,0.4)] bg-white/5'
-                          : 'text-sm sm:text-base font-medium text-neutral-500 hover:text-neutral-300'
-                      }`}
-                    >
-                      {line.text}
-                    </div>
-                  );
-                })
-              ) : (
-                <div className="py-12 flex flex-col items-center justify-center gap-3 text-neutral-400">
-                  <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center text-[#EAA599] mb-1">
-                    <Music2 size={24} />
-                  </div>
-                  <h4 className="text-base font-bold text-white">High-Fidelity Audio Stream</h4>
-                  <p className="text-xs text-neutral-400 max-w-xs text-center leading-relaxed">
-                    Synchronized lyric timestamps are ready for this track. Lyrics embedded in audio metadata will appear here automatically.
-                  </p>
-                  <div className="mt-4 px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-xs text-[#EAA599] font-mono">
-                    ♪ {cleanTrack.title} • {cleanTrack.artist} ♪
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* TAB 2: CREDITS & METADATA */}
-          {activeTab === 'details' && (
-            <div className="space-y-4">
-              {/* Top Banner */}
-              <div className="flex items-center gap-4 p-4 rounded-xl bg-white/5 border border-white/10">
-                <img
-                  src={cleanTrack.coverUrl || '/artwork.png'}
-                  alt={cleanTrack.title}
-                  className="w-16 h-16 rounded-xl object-cover shadow-lg flex-shrink-0"
-                />
-                <div className="min-w-0 pr-2">
-                  <h3 className="text-base font-bold text-white truncate">
-                    {cleanTrack.title}
-                  </h3>
-                  <p className="text-xs text-neutral-400 truncate mt-0.5">
-                    {cleanTrack.artist}
-                  </p>
-                  <span className="inline-block mt-1.5 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-[#EAA599]/20 text-[#EAA599] border border-[#EAA599]/30 uppercase tracking-wider">
-                    {cleanTrack.album || 'Cloud Vault'}
-                  </span>
-                </div>
-              </div>
-
-              {/* Technical Specifications Grid */}
-              <div className="grid grid-cols-2 gap-2.5">
-                <div className="p-3 rounded-xl bg-white/5 border border-white/5">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-500 block mb-1">
-                    Audio Quality
-                  </span>
-                  <span className="text-xs font-bold text-white">320 Kbps High Quality</span>
-                </div>
-                <div className="p-3 rounded-xl bg-white/5 border border-white/5">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-500 block mb-1">
-                    Codec / Container
-                  </span>
-                  <span className="text-xs font-bold text-white">MPEG Audio Layer 3 (MP3)</span>
-                </div>
-                <div className="p-3 rounded-xl bg-white/5 border border-white/5">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-500 block mb-1">
-                    Sample Rate
-                  </span>
-                  <span className="text-xs font-bold text-white">44,100 Hz Stereo</span>
-                </div>
-                <div className="p-3 rounded-xl bg-white/5 border border-white/5">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-500 block mb-1">
-                    Duration
-                  </span>
-                  <span className="text-xs font-bold text-white">{formatTime(duration)}</span>
-                </div>
-              </div>
-
-              {/* Storage & Provenance */}
-              <div className="p-4 rounded-xl bg-white/5 border border-white/5 space-y-2">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-500 block">
-                  Storage & Cloud Origin
-                </span>
-                <p className="text-xs text-neutral-300 leading-relaxed">
-                  Streamed directly from your personal Cloudflare R2 bucket storage with zero compression loss.
-                </p>
-                <div className="flex items-center justify-between pt-1">
-                  <span className="text-[11px] text-neutral-400 font-mono truncate max-w-[260px]">
-                    {cleanTrack.audioUrl}
-                  </span>
-                  <button
-                    onClick={handleCopyLink}
-                    className="flex items-center gap-1 text-[11px] font-semibold text-[#EAA599] hover:underline flex-shrink-0"
-                  >
-                    {copied ? <Check size={12} /> : <Copy size={12} />}
-                    <span>{copied ? 'Copied' : 'Copy URL'}</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* TAB 3: VISUALIZER */}
-          {activeTab === 'visualizer' && (
-            <div className="flex flex-col items-center justify-center py-4">
-              <div className="w-full flex items-center justify-between mb-4 px-2">
-                <div>
-                  <h4 className="text-sm font-bold text-white">Live Frequency Spectrum</h4>
-                  <p className="text-xs text-neutral-400">Audio reactive harmonic frequencies</p>
-                </div>
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#EAA599]/15 text-[#EAA599] border border-[#EAA599]/25 uppercase tracking-wider">
-                  {isPlaying ? 'ACTIVE' : 'STANDBY'}
-                </span>
-              </div>
-
-              <div className="w-full h-56 bg-black/40 border border-white/10 rounded-xl overflow-hidden flex items-center justify-center p-4">
-                <canvas ref={visualizerCanvasRef} className="w-full h-full" />
-              </div>
-            </div>
-          )}
-
-        </div>
-
-        {/* Footer */}
-        <footer className="h-12 px-5 border-t border-white/10 flex items-center justify-between flex-shrink-0 bg-[#090a0d]/80 text-[11px] text-neutral-400">
-          <span>VaultX Audio Engine</span>
-          <span className="text-[#EAA599] font-mono">{formatTime(currentTime)} / {formatTime(duration)}</span>
-        </footer>
-
-      </div>
-    </div>
+          <footer className="vx-dialog-footer"><span className="vx-playback-time">{formatTime(currentTime)} <span>/ {formatTime(duration)}</span></span><button className="vx-text-button" onClick={togglePlay}>{isPlaying ? <Pause size={16} /> : <Play size={16} />}{isPlaying ? 'Pause' : 'Play'}</button></footer>
+        </>}
+      </section>
+    </dialog>
   );
 };
