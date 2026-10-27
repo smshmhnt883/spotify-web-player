@@ -20,17 +20,20 @@ import {
 } from 'lucide-react';
 import { usePlayerStore } from '../../store/usePlayerStore';
 import { formatTime } from '../../utils/formatTime';
+import { sanitizeTrack } from '../../utils/trackSanitizer';
 import { AudioReactiveBackground } from '../visualizer/AudioReactiveBackground';
 import type { Track } from '../../types';
 
 interface MinimalistPlayerProps {
   onToggleAlbumsSlideBar: () => void;
   onOpenCloudVaultModal: () => void;
+  isSlideBarOpen?: boolean;
 }
 
 export const MinimalistPlayer: React.FC<MinimalistPlayerProps> = ({
   onToggleAlbumsSlideBar,
-  onOpenCloudVaultModal
+  onOpenCloudVaultModal,
+  isSlideBarOpen = false
 }) => {
   const {
     currentTrack,
@@ -70,7 +73,10 @@ export const MinimalistPlayer: React.FC<MinimalistPlayerProps> = ({
   // Active playlist / album info
   const activePlaylist = playlists.find(p => p.id === activePlaylistId) || playlists[0];
   const albumTitle = currentTrack?.album || activePlaylist?.title || 'CLOUD VAULT FAVORITES';
-  const artistName = currentTrack?.artist || 'VAULTX ARTIST';
+  
+  // Sanitized current track
+  const cleanCurrentTrack = currentTrack ? sanitizeTrack(currentTrack) : null;
+  const artistName = cleanCurrentTrack?.artist || 'VAULTX ARTIST';
   
   const getTrackCover = (cover?: string) => {
     if (!cover || cover.includes('photo-1470225620780') || cover.includes('unsplash.com')) {
@@ -79,8 +85,8 @@ export const MinimalistPlayer: React.FC<MinimalistPlayerProps> = ({
     return cover;
   };
 
-  const displayCover = getTrackCover(currentTrack?.coverUrl);
-  const isLiked = currentTrack ? likedTrackIds.includes(currentTrack.id) : false;
+  const displayCover = getTrackCover(cleanCurrentTrack?.coverUrl);
+  const isLiked = cleanCurrentTrack ? likedTrackIds.includes(cleanCurrentTrack.id) : false;
 
   // Next up tracks: tracks following current track in context
   const nextUpTracks: Track[] = contextTracks.length > 0
@@ -130,18 +136,20 @@ export const MinimalistPlayer: React.FC<MinimalistPlayerProps> = ({
         className="relative z-10 w-full max-w-6xl xl:max-w-7xl h-full md:max-h-[880px] lg:max-h-[900px] bg-[#0c0d10]/95 backdrop-blur-2xl border-0 md:border border-white/10 rounded-none md:rounded-2xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.85)] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-300 transition-shadow duration-500"
         style={{
           boxShadow: isPlaying 
-            ? `0 25px 80px -15px ${currentTrack?.dominantColor ? currentTrack.dominantColor + '40' : 'rgba(234,165,153,0.25)'}`
+            ? `0 25px 80px -15px ${cleanCurrentTrack?.dominantColor ? cleanCurrentTrack.dominantColor + '40' : 'rgba(234,165,153,0.25)'}`
             : '0 25px 60px -15px rgba(0,0,0,0.85)'
         }}
       >
         
         {/* TOP BAR / WINDOW CHROME */}
         <header className="h-14 px-3 sm:px-6 border-b border-white/5 flex items-center justify-between flex-shrink-0 bg-[#090a0d]/90">
-          {/* Left: Enhanced Albums Slide Bar Trigger */}
+          {/* Left: Enhanced Albums Slide Bar Trigger (Hides smoothly when drawer is open to prevent ✕ button bleed) */}
           <div className="flex items-center gap-2 sm:gap-3">
             <button
               onClick={onToggleAlbumsSlideBar}
-              className="flex items-center gap-2 px-2.5 sm:px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-neutral-200 hover:text-white transition group border border-white/5 shadow-sm active:scale-95"
+              className={`flex items-center gap-2 px-2.5 sm:px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-neutral-200 hover:text-white transition-opacity duration-200 group border border-white/5 shadow-sm active:scale-95 ${
+                isSlideBarOpen ? 'opacity-0 pointer-events-none' : 'opacity-100 pointer-events-auto'
+              }`}
               title="Open Albums Slide Bar"
             >
               <Menu size={16} className="text-white group-hover:text-[#EAA599] group-hover:scale-110 transition-all" />
@@ -150,7 +158,7 @@ export const MinimalistPlayer: React.FC<MinimalistPlayerProps> = ({
               </span>
             </button>
 
-            {/* Audio-Reactive Beat Indicator (Harmonized Pastel Rose Accent) */}
+            {/* Audio-Reactive Beat Indicator */}
             {isPlaying && (
               <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#EAA599]/10 border border-[#EAA599]/25 text-[#EAA599] text-[10px] font-semibold tracking-wider">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#EAA599] animate-ping inline-block" />
@@ -229,7 +237,7 @@ export const MinimalistPlayer: React.FC<MinimalistPlayerProps> = ({
               {/* Actual Album Artwork Image Background */}
               <img
                 src={displayCover}
-                alt={currentTrack?.title || 'Album Artwork'}
+                alt={cleanCurrentTrack?.title || 'Album Artwork'}
                 className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
               />
 
@@ -238,7 +246,7 @@ export const MinimalistPlayer: React.FC<MinimalistPlayerProps> = ({
 
               {/* Artwork Top Header: Geometric Logo & Album Title */}
               <div className="relative z-10 flex items-center justify-between w-full">
-                {/* Geometric Logo (Tidal/VaultX Motif with pastel blush & warm white accents) */}
+                {/* Geometric Logo */}
                 <div
                   onClick={onToggleAlbumsSlideBar}
                   className="w-9 h-9 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center cursor-pointer hover:scale-110 active:scale-95 transition text-white border border-white/20 shadow-lg"
@@ -252,7 +260,7 @@ export const MinimalistPlayer: React.FC<MinimalistPlayerProps> = ({
                   </div>
                 </div>
 
-                {/* Album Title (Matches Top-Right of Reference Artwork) */}
+                {/* Album Title */}
                 <span className="text-xs sm:text-sm font-black tracking-widest text-white uppercase drop-shadow-md bg-black/40 backdrop-blur-md px-3.5 py-1 rounded-full border border-white/10">
                   {albumTitle}
                 </span>
@@ -272,13 +280,13 @@ export const MinimalistPlayer: React.FC<MinimalistPlayerProps> = ({
                 </div>
               </div>
 
-              {/* Artwork Bottom Header: Artist Name (Matches Bottom-Left of Reference Artwork) */}
+              {/* Artwork Bottom Header: Artist Name */}
               <div className="relative z-10 flex items-end justify-between w-full">
                 <span className="text-xs sm:text-sm font-black tracking-widest text-white uppercase drop-shadow-md bg-black/40 backdrop-blur-md px-3.5 py-1 rounded-full border border-white/10">
                   {artistName}
                 </span>
 
-                {/* Pulsing Audio Wave Indicator (Pink & Ivory accents) */}
+                {/* Pulsing Audio Wave Indicator */}
                 {isPlaying && (
                   <div className="flex items-end gap-0.5 h-5 px-2 py-1 rounded-full bg-black/40 backdrop-blur-md border border-white/10">
                     <span className="w-0.5 h-3 bg-[#f3cbc4] rounded-full animate-pulse" />
@@ -301,32 +309,48 @@ export const MinimalistPlayer: React.FC<MinimalistPlayerProps> = ({
               </span>
             </div>
 
-            {/* 2. Currently Playing Track Card */}
-            {currentTrack && (
-              <div className="flex items-center justify-between p-2.5 rounded-xl bg-white/5 border border-white/10 shadow-sm mb-5 transition">
+            {/* 2. Currently Playing Track Card (Active Track Indicator with Equalizer / Glowing Border) */}
+            {cleanCurrentTrack && (
+              <div className={`flex items-center justify-between p-2.5 rounded-xl transition-all duration-300 mb-5 ${
+                isPlaying
+                  ? 'bg-white/[0.08] border border-[#EAA599]/40 shadow-[0_0_20px_-5px_rgba(234,165,153,0.3)]'
+                  : 'bg-white/5 border border-white/10 shadow-sm'
+              }`}>
                 <div className="flex items-center gap-3 min-w-0">
                   <img
-                    src={getTrackCover(currentTrack.coverUrl)}
-                    alt={currentTrack.title}
+                    src={getTrackCover(cleanCurrentTrack.coverUrl)}
+                    alt={cleanCurrentTrack.title}
                     className="w-11 h-11 rounded-lg object-cover flex-shrink-0 shadow-md"
                   />
                   <div className="min-w-0 pr-2">
-                    <h4 className="text-sm font-bold text-[#EAA599] truncate">
-                      {currentTrack.title}
+                    {/* Track Title: Bold White (Primary Slot) */}
+                    <h4 className="text-sm font-bold text-white truncate">
+                      {cleanCurrentTrack.title}
                     </h4>
+                    {/* Artist Name: Muted Grey (Subtitle Slot) */}
                     <p className="text-xs text-neutral-400 truncate mt-0.5">
-                      {currentTrack.artist}
+                      {cleanCurrentTrack.artist}
                     </p>
                   </div>
                 </div>
 
+                {/* Active Indicator Button: Equalizer when playing / Pause on hover / Play when paused */}
                 <div
                   onClick={togglePlay}
-                  className="w-8 h-8 rounded-full bg-white/10 hover:bg-[#EAA599] text-white hover:text-black flex items-center justify-center flex-shrink-0 cursor-pointer transition"
+                  className="group/btn relative w-8 h-8 rounded-full bg-white/10 hover:bg-[#EAA599] text-white hover:text-black flex items-center justify-center flex-shrink-0 cursor-pointer transition shadow-sm"
                   title={isPlaying ? 'Pause' : 'Play'}
                 >
                   {isPlaying ? (
-                    <Pause size={14} className="fill-current" />
+                    <>
+                      {/* Animated Equalizer Icon (Visible by default while playing) */}
+                      <div className="flex items-end gap-0.5 h-3.5 group-hover/btn:hidden">
+                        <span className="w-0.5 h-3 bg-[#EAA599] rounded-full animate-pulse" />
+                        <span className="w-0.5 h-2 bg-white rounded-full animate-bounce delay-75" />
+                        <span className="w-0.5 h-3.5 bg-[#EAA599] rounded-full animate-pulse delay-150" />
+                      </div>
+                      {/* Pause Icon (Revealed on hover) */}
+                      <Pause size={14} className="hidden group-hover/btn:block fill-current" />
+                    </>
                   ) : (
                     <Play size={14} className="fill-current ml-0.5" />
                   )}
@@ -344,47 +368,58 @@ export const MinimalistPlayer: React.FC<MinimalistPlayerProps> = ({
               </span>
             </div>
 
-            {/* 4. Scrollable List of Tracks */}
+            {/* 4. Scrollable List of Tracks (With Right-Aligned Durations) */}
             <div className="flex-1 overflow-y-auto space-y-1 pr-1 custom-scrollbar">
               {nextUpTracks.length === 0 ? (
                 <div className="text-center py-10 text-xs text-neutral-500">
                   No other tracks in this album
                 </div>
               ) : (
-                nextUpTracks.map((track) => (
-                  <div
-                    key={track.id}
-                    onClick={() => playTrack(track)}
-                    className="group flex items-center justify-between p-2 rounded-xl hover:bg-white/5 transition-all duration-150 cursor-pointer"
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <img
-                        src={getTrackCover(track.coverUrl)}
-                        alt={track.title}
-                        className="w-10 h-10 rounded-lg object-cover flex-shrink-0 bg-neutral-800"
-                      />
-                      <div className="min-w-0 pr-2">
-                        <span className="text-sm font-medium text-white group-hover:text-neutral-200 truncate block">
-                          {track.title}
+                nextUpTracks.map((rawTrack) => {
+                  const track = sanitizeTrack(rawTrack);
+                  return (
+                    <div
+                      key={track.id}
+                      onClick={() => playTrack(track)}
+                      className="group flex items-center justify-between p-2 rounded-xl hover:bg-white/5 transition-all duration-150 cursor-pointer"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <img
+                          src={getTrackCover(track.coverUrl)}
+                          alt={track.title}
+                          className="w-10 h-10 rounded-lg object-cover flex-shrink-0 bg-neutral-800"
+                        />
+                        <div className="min-w-0 pr-2">
+                          {/* Title: Bold White */}
+                          <span className="text-sm font-semibold text-white group-hover:text-white truncate block">
+                            {track.title}
+                          </span>
+                          {/* Artist: Muted Grey */}
+                          <span className="text-xs text-neutral-400 group-hover:text-neutral-300 truncate block mt-0.5">
+                            {track.artist}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Right-aligned Duration + Hover Remove */}
+                      <div className="flex items-center gap-2 flex-shrink-0 pl-2">
+                        <span className="text-xs text-neutral-400 group-hover:text-neutral-300 tabular-nums font-mono">
+                          {formatTime(track.durationSec || 180)}
                         </span>
-                        <span className="text-xs text-neutral-400 truncate block mt-0.5">
-                          {track.artist}
-                        </span>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removeFromQueue(track.id);
+                          }}
+                          className="w-6 h-6 rounded-full opacity-0 group-hover:opacity-100 flex items-center justify-center text-neutral-400 hover:text-white hover:bg-white/10 transition"
+                          title="Remove from queue"
+                        >
+                          <X size={13} />
+                        </button>
                       </div>
                     </div>
-
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        removeFromQueue(track.id);
-                      }}
-                      className="w-7 h-7 rounded-full opacity-0 group-hover:opacity-100 flex items-center justify-center text-neutral-400 hover:text-white hover:bg-white/10 transition"
-                      title="Remove from queue"
-                    >
-                      <X size={14} />
-                    </button>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
           </section>
@@ -405,7 +440,7 @@ export const MinimalistPlayer: React.FC<MinimalistPlayerProps> = ({
                   {/* Artwork Image */}
                   <img
                     src={displayCover}
-                    alt={currentTrack?.title || 'Album Artwork'}
+                    alt={cleanCurrentTrack?.title || 'Album Artwork'}
                     className="absolute inset-0 w-full h-full object-cover"
                   />
 
@@ -468,7 +503,7 @@ export const MinimalistPlayer: React.FC<MinimalistPlayerProps> = ({
               <div className="w-full max-w-[340px] mx-auto flex items-center justify-between px-2 py-2">
                 <div className="min-w-0 pr-3">
                   <h3 className="text-base font-bold text-white truncate drop-shadow-sm">
-                    {currentTrack?.title || 'No track selected'}
+                    {cleanCurrentTrack?.title || 'No track selected'}
                   </h3>
                   <p className="text-xs text-neutral-400 truncate mt-0.5">
                     {artistName} • <span className="text-neutral-500 uppercase tracking-wider">{albumTitle}</span>
@@ -476,7 +511,7 @@ export const MinimalistPlayer: React.FC<MinimalistPlayerProps> = ({
                 </div>
 
                 <button
-                  onClick={() => currentTrack && toggleLike(currentTrack.id)}
+                  onClick={() => cleanCurrentTrack && toggleLike(cleanCurrentTrack.id)}
                   className={`p-2 rounded-full hover:bg-white/10 active:scale-90 transition ${
                     isLiked ? 'text-red-500 fill-red-500' : 'text-neutral-400 hover:text-white'
                   }`}
@@ -596,28 +631,29 @@ export const MinimalistPlayer: React.FC<MinimalistPlayerProps> = ({
                 </div>
 
                 {/* Active Track Card on Mobile */}
-                {currentTrack && (
+                {cleanCurrentTrack && (
                   <div 
                     onClick={() => setMobileTab('player')}
-                    className="flex items-center justify-between p-3 rounded-xl bg-white/10 border border-[#EAA599]/30 shadow-sm mb-4 cursor-pointer active:scale-98 transition"
+                    className={`flex items-center justify-between p-3 rounded-xl shadow-sm mb-4 cursor-pointer active:scale-98 transition-all ${
+                      isPlaying
+                        ? 'bg-white/[0.09] border border-[#EAA599]/40 shadow-[0_0_20px_-5px_rgba(234,165,153,0.3)]'
+                        : 'bg-white/10 border border-white/10'
+                    }`}
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       <img
-                        src={getTrackCover(currentTrack.coverUrl)}
-                        alt={currentTrack.title}
+                        src={getTrackCover(cleanCurrentTrack.coverUrl)}
+                        alt={cleanCurrentTrack.title}
                         className="w-12 h-12 rounded-lg object-cover flex-shrink-0 shadow-md"
                       />
                       <div className="min-w-0 pr-2">
-                        <div className="flex items-center gap-1.5">
-                          <h4 className="text-sm font-bold text-[#EAA599] truncate">
-                            {currentTrack.title}
-                          </h4>
-                          {isPlaying && (
-                            <span className="w-1.5 h-1.5 rounded-full bg-[#EAA599] animate-ping flex-shrink-0" />
-                          )}
-                        </div>
+                        {/* Title: Bold White */}
+                        <h4 className="text-sm font-bold text-white truncate">
+                          {cleanCurrentTrack.title}
+                        </h4>
+                        {/* Artist: Muted Grey */}
                         <p className="text-xs text-neutral-400 truncate mt-0.5">
-                          {currentTrack.artist}
+                          {cleanCurrentTrack.artist}
                         </p>
                       </div>
                     </div>
@@ -627,10 +663,15 @@ export const MinimalistPlayer: React.FC<MinimalistPlayerProps> = ({
                         e.stopPropagation();
                         togglePlay();
                       }}
-                      className="w-9 h-9 rounded-full bg-white/15 text-white flex items-center justify-center flex-shrink-0 cursor-pointer active:scale-90 transition"
+                      className="w-9 h-9 rounded-full bg-white/15 text-white hover:bg-[#EAA599] hover:text-black flex items-center justify-center flex-shrink-0 cursor-pointer active:scale-90 transition"
+                      title={isPlaying ? 'Pause' : 'Play'}
                     >
                       {isPlaying ? (
-                        <Pause size={16} className="fill-current" />
+                        <div className="flex items-end gap-0.5 h-3.5">
+                          <span className="w-0.5 h-3 bg-[#EAA599] rounded-full animate-pulse" />
+                          <span className="w-0.5 h-2 bg-white rounded-full animate-bounce delay-75" />
+                          <span className="w-0.5 h-3.5 bg-[#EAA599] rounded-full animate-pulse delay-150" />
+                        </div>
                       ) : (
                         <Play size={16} className="fill-current ml-0.5" />
                       )}
@@ -655,40 +696,48 @@ export const MinimalistPlayer: React.FC<MinimalistPlayerProps> = ({
                       No other tracks in this album
                     </div>
                   ) : (
-                    nextUpTracks.map((track) => (
-                      <div
-                        key={track.id}
-                        onClick={() => playTrack(track)}
-                        className="flex items-center justify-between p-2.5 rounded-xl hover:bg-white/5 active:bg-white/10 transition cursor-pointer"
-                      >
-                        <div className="flex items-center gap-3 min-w-0">
-                          <img
-                            src={getTrackCover(track.coverUrl)}
-                            alt={track.title}
-                            className="w-10 h-10 rounded-lg object-cover flex-shrink-0 bg-neutral-800"
-                          />
-                          <div className="min-w-0 pr-2">
-                            <span className="text-sm font-medium text-white truncate block">
-                              {track.title}
+                    nextUpTracks.map((rawTrack) => {
+                      const track = sanitizeTrack(rawTrack);
+                      return (
+                        <div
+                          key={track.id}
+                          onClick={() => playTrack(track)}
+                          className="flex items-center justify-between p-2.5 rounded-xl hover:bg-white/5 active:bg-white/10 transition cursor-pointer"
+                        >
+                          <div className="flex items-center gap-3 min-w-0">
+                            <img
+                              src={getTrackCover(track.coverUrl)}
+                              alt={track.title}
+                              className="w-10 h-10 rounded-lg object-cover flex-shrink-0 bg-neutral-800"
+                            />
+                            <div className="min-w-0 pr-2">
+                              <span className="text-sm font-semibold text-white truncate block">
+                                {track.title}
+                              </span>
+                              <span className="text-xs text-neutral-400 truncate block mt-0.5">
+                                {track.artist}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2 flex-shrink-0 pl-2">
+                            <span className="text-xs text-neutral-400 tabular-nums font-mono">
+                              {formatTime(track.durationSec || 180)}
                             </span>
-                            <span className="text-xs text-neutral-400 truncate block mt-0.5">
-                              {track.artist}
-                            </span>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                removeFromQueue(track.id);
+                              }}
+                              className="w-8 h-8 rounded-full flex items-center justify-center text-neutral-400 hover:text-white transition"
+                              title="Remove from queue"
+                            >
+                              <X size={15} />
+                            </button>
                           </div>
                         </div>
-
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            removeFromQueue(track.id);
-                          }}
-                          className="w-8 h-8 rounded-full flex items-center justify-center text-neutral-400 hover:text-white transition"
-                          title="Remove from queue"
-                        >
-                          <X size={15} />
-                        </button>
-                      </div>
-                    ))
+                      );
+                    })
                   )}
                 </div>
               </div>
@@ -709,12 +758,12 @@ export const MinimalistPlayer: React.FC<MinimalistPlayerProps> = ({
                 >
                   <img
                     src={displayCover}
-                    alt={currentTrack?.title || 'Mini Player'}
+                    alt={cleanCurrentTrack?.title || 'Mini Player'}
                     className="w-10 h-10 rounded-lg object-cover flex-shrink-0"
                   />
                   <div className="min-w-0 pr-2">
                     <p className="text-xs font-bold text-white truncate">
-                      {currentTrack?.title || 'No track selected'}
+                      {cleanCurrentTrack?.title || 'No track selected'}
                     </p>
                     <p className="text-[11px] text-neutral-400 truncate">
                       {artistName}
@@ -763,14 +812,15 @@ export const MinimalistPlayer: React.FC<MinimalistPlayerProps> = ({
           <div className="w-[28%] min-w-[140px] flex items-center gap-3">
             <div className="min-w-0">
               <div className="flex items-center gap-2">
+                {/* Title: Bold White */}
                 <span className="text-sm font-bold text-white truncate max-w-[180px] sm:max-w-[220px]">
-                  {currentTrack?.title || 'No track selected'}
+                  {cleanCurrentTrack?.title || 'No track selected'}
                 </span>
 
                 {/* Heart / Like Button */}
-                {currentTrack && (
+                {cleanCurrentTrack && (
                   <button
-                    onClick={() => toggleLike(currentTrack.id)}
+                    onClick={() => toggleLike(cleanCurrentTrack.id)}
                     className={`transition hover:scale-110 active:scale-95 ${
                       isLiked ? 'text-red-500 fill-red-500' : 'text-neutral-400 hover:text-white'
                     }`}
@@ -790,6 +840,7 @@ export const MinimalistPlayer: React.FC<MinimalistPlayerProps> = ({
                 </button>
               </div>
 
+              {/* Artist Name: Muted Grey */}
               <div className="flex flex-col text-[11px] text-neutral-400 truncate mt-0.5">
                 <span className="truncate">{artistName}</span>
                 <span className="truncate text-[10px] text-neutral-500 uppercase tracking-wider">

@@ -31,6 +31,10 @@ export const AudioReactiveBackground: React.FC = () => {
     ? currentTrack.dominantColor 
     : '#EAA599';
 
+  const currentCover = (!currentTrack?.coverUrl || currentTrack.coverUrl.includes('photo-1470225620780') || currentTrack.coverUrl.includes('unsplash.com'))
+    ? '/artwork.png'
+    : currentTrack.coverUrl;
+
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -189,11 +193,13 @@ export const AudioReactiveBackground: React.FC = () => {
 
   return (
     <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
-      {/* 1. Underlying Forest Background */}
+      {/* 1. Dynamic Ambient Artwork Backdrop (Blurred per-track cover art) */}
       <div
-        className="absolute inset-0 bg-cover bg-center opacity-70 scale-105 transition-all duration-1000"
+        className="absolute inset-0 bg-cover bg-center transition-all duration-1000 ease-out"
         style={{
-          backgroundImage: `url('https://images.unsplash.com/photo-1511497584788-87676104235f?auto=format&fit=crop&w=2400&q=80')`
+          backgroundImage: `url('${currentCover}')`,
+          filter: 'blur(80px) saturate(180%) brightness(0.38)',
+          transform: 'scale(1.2)'
         }}
       />
 

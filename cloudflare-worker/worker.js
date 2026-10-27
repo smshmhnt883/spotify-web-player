@@ -36,9 +36,10 @@ function hashString(str) {
 
 function cleanTrackTitle(fileName) {
   let name = fileName.replace(/\.[^/.]+$/, '');
-  name = name.replace(/\s*[\(\[](official\s*music\s*video|official\s*video|music\s*video|visualizer|audio|lyrics?|320\s*kbps|\d+p)[\)\]]/gi, '');
-  name = name.replace(/\s*-\s*\(320\s*Kbps\)/gi, '');
+  name = name.replace(/\s*[\(\[](?:official\s*(?:music\s*)?video|official\s*video|music\s*video|visualizer|audio|lyrics?|360[°\s]*music\s*video|320\s*kbps|\d+p)[\)\]]/gi, '');
+  name = name.replace(/\s*-\s*\(?320\s*Kbps\)?/gi, '');
   name = name.replace(/_/g, ' ').replace(/\s+/g, ' ').trim();
+  name = name.replace(/^[\s–—_-]+|[\s–—_-]+$/g, '').trim();
   return name;
 }
 
@@ -50,13 +51,38 @@ function parseMetadata(fileName) {
 
   if (cleaned.includes(' - ')) {
     const parts = cleaned.split(' - ');
-    artist = parts[0].trim();
-    title = parts.slice(1).join(' - ').trim();
+    artist = parts[0].trim().replace(/^[\s–—_-]+|[\s–—_-]+$/g, '');
+    title = parts.slice(1).join(' - ').trim().replace(/^[\s–—_-]+|[\s–—_-]+$/g, '');
   } else if (cleaned.includes(' by ')) {
     const parts = cleaned.split(' by ');
-    title = parts[0].trim();
-    artist = parts[1].trim();
+    title = parts[0].trim().replace(/^[\s–—_-]+|[\s–—_-]+$/g, '');
+    artist = parts[1].trim().replace(/^[\s–—_-]+|[\s–—_-]+$/g, '');
   }
+
+  // Detect and swap if Title contains multi-artist list while Artist is short song title
+  const multiArtistPattern = /,\s*|\s+(?:feat\.?|ft\.?|prod\.?|with|inferno|mxrci)\s+/i;
+  if (multiArtistPattern.test(title) && !multiArtistPattern.test(artist) && artist !== 'Various Artists' && artist.length > 0 && artist.length < 25) {
+    const temp = title;
+    title = artist;
+    artist = temp;
+  }
+
+  // Handle Various Artists with specific songs
+  if (artist === 'Various Artists') {
+    if (title.toUpperCase().startsWith('LOW FADE')) {
+      title = 'Low Fade';
+      artist = 'Karan Aujla';
+    } else if (title.startsWith('Ashke')) {
+      title = 'Ashke';
+      artist = 'Karan Aujla, Mxrci';
+    } else if (title.startsWith('Jackpot')) {
+      title = 'Jackpot';
+      artist = 'Cheema Y, Gur Sidhu';
+    }
+  }
+
+  title = title.replace(/^[\s–—_-]+|[\s–—_-]+$/g, '').trim();
+  artist = artist.replace(/^[\s–—_-]+|[\s–—_-]+$/g, '').trim();
 
   return { artist, title };
 }

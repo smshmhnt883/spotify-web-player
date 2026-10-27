@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { Track, Playlist, RepeatMode, DrawerMode, ViewMode } from '../types';
 import { TRACKS, PLAYLISTS } from '../data/mockData';
+import { sanitizeTrack, cleanString } from '../utils/trackSanitizer';
 
 interface PlayerStore {
   // Navigation
@@ -276,13 +277,10 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
     const processPlaylists = (rawPlaylists: any[]): Playlist[] => {
       return rawPlaylists.map(p => ({
         ...p,
+        title: cleanString(p.title) || 'Cloud Vault Album',
         coverUrl: sanitizeCoverUrl(p.coverUrl),
-        dominantColor: p.dominantColor || '#f3cbc4',
-        tracks: (p.tracks || []).map((t: any) => ({
-          ...t,
-          coverUrl: sanitizeCoverUrl(t.coverUrl),
-          dominantColor: t.dominantColor || '#f3cbc4'
-        }))
+        dominantColor: p.dominantColor || '#EAA599',
+        tracks: (p.tracks || []).map((t: any) => sanitizeTrack(t))
       }));
     };
 

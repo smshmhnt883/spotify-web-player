@@ -27,6 +27,7 @@ export const App: React.FC = () => {
 
       {/* 2. Main Minimalist One-Home-Page Player (Matches Reference Screenshot) */}
       <MinimalistPlayer
+        isSlideBarOpen={isAlbumsSlideBarOpen}
         onToggleAlbumsSlideBar={() => setIsAlbumsSlideBarOpen(!isAlbumsSlideBarOpen)}
         onOpenCloudVaultModal={() => setIsCloudVaultModalOpen(true)}
       />
