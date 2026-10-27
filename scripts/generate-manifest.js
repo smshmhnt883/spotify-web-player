@@ -114,8 +114,8 @@ function scanDirectory(dir, relPath = '') {
           album: 'Cloud Vault Favorites',
           durationSec: 180,
           audioUrl,
-          coverUrl: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=500&auto=format&fit=crop&q=80',
-          dominantColor: '#4338ca',
+          coverUrl: '/artwork.png',
+          dominantColor: '#f3cbc4',
           lyrics: [
             { timeMs: 0, text: `♪ ${title} ♪` },
             { timeMs: 5000, text: `Artist: ${artist}` }
@@ -131,8 +131,8 @@ function scanDirectory(dir, relPath = '') {
       id: 'playlist-cloud-vault',
       title: 'Cloud Vault Favorites',
       description: `Personal music collection streamed directly from Cloudflare R2.`,
-      coverUrl: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=500&auto=format&fit=crop&q=80',
-      dominantColor: '#4338ca',
+      coverUrl: '/artwork.png',
+      dominantColor: '#f3cbc4',
       creator: 'My Cloud Vault',
       followers: '1',
       tracks: directTracks

@@ -265,6 +265,27 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
     const { workerApiUrl, cloudVaultUrl } = get();
     const candidateWorker = (urlOverride !== undefined ? urlOverride : workerApiUrl || '').trim();
 
+    // Helper to replace generic stock/DJ covers with user's artwork
+    const sanitizeCoverUrl = (url?: string) => {
+      if (!url || url.includes('photo-1470225620780') || url.includes('unsplash.com')) {
+        return '/artwork.png';
+      }
+      return url;
+    };
+
+    const processPlaylists = (rawPlaylists: any[]): Playlist[] => {
+      return rawPlaylists.map(p => ({
+        ...p,
+        coverUrl: sanitizeCoverUrl(p.coverUrl),
+        dominantColor: p.dominantColor || '#f3cbc4',
+        tracks: (p.tracks || []).map((t: any) => ({
+          ...t,
+          coverUrl: sanitizeCoverUrl(t.coverUrl),
+          dominantColor: t.dominantColor || '#f3cbc4'
+        }))
+      }));
+    };
+
     set({ cloudSyncStatus: 'syncing', cloudSyncMessage: 'Connecting to Cloudflare Vault...' });
 
     // 1. Prioritize Method 2: Cloudflare Worker Real-Time API
@@ -275,9 +296,10 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
         if (res.ok) {
           const data = await res.json();
           if (data && Array.isArray(data.playlists) && data.playlists.length > 0) {
-            const total = data.totalTracks || data.playlists.reduce((acc: number, p: any) => acc + (p.tracks?.length || 0), 0);
+            const cleanPlaylists = processPlaylists(data.playlists);
+            const total = data.totalTracks || cleanPlaylists.reduce((acc: number, p: any) => acc + (p.tracks?.length || 0), 0);
             set({
-              playlists: [...data.playlists, ...PLAYLISTS],
+              playlists: [...cleanPlaylists, ...PLAYLISTS],
               isCloudSynced: true,
               cloudSyncStatus: 'success',
               cloudSyncMessage: `Real-Time Discovery: ${total} tracks loaded`,
@@ -288,12 +310,12 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
               localStorage.setItem('vaultx_worker_api_url', cleanWorkerUrl);
             }
 
-            const firstCloudTrack = data.playlists[0]?.tracks[0];
+            const firstCloudTrack = cleanPlaylists[0]?.tracks[0];
             if (firstCloudTrack && !get().isPlaying) {
               set({
                 currentTrack: firstCloudTrack,
                 duration: firstCloudTrack.durationSec,
-                contextTracks: data.playlists[0].tracks,
+                contextTracks: cleanPlaylists[0].tracks,
                 contextIndex: 0
               });
             }
@@ -312,21 +334,22 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
       if (res.ok) {
         const data = await res.json();
         if (data && Array.isArray(data.playlists) && data.playlists.length > 0) {
+          const cleanPlaylists = processPlaylists(data.playlists);
           const total = data.playlists.reduce((acc: number, p: any) => acc + (p.tracks?.length || 0), 0);
           set({
-            playlists: [...data.playlists, ...PLAYLISTS],
+            playlists: [...cleanPlaylists, ...PLAYLISTS],
             isCloudSynced: true,
             cloudSyncStatus: 'success',
             cloudSyncMessage: `Static R2 Manifest: ${total} tracks loaded`,
             cloudTrackCount: total
           });
 
-          const firstCloudTrack = data.playlists[0]?.tracks[0];
+          const firstCloudTrack = cleanPlaylists[0]?.tracks[0];
           if (firstCloudTrack && !get().isPlaying) {
             set({
               currentTrack: firstCloudTrack,
               duration: firstCloudTrack.durationSec,
-              contextTracks: data.playlists[0].tracks,
+              contextTracks: cleanPlaylists[0].tracks,
               contextIndex: 0
             });
           }

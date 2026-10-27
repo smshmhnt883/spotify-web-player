@@ -16,18 +16,12 @@ const AUDIO_EXTENSIONS = new Set([
 ]);
 
 const COVER_IMAGES = [
-  'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=500&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=500&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=500&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=500&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1459749411175-04bf5292ceea?w=500&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1487180144351-b8472da7d491?w=500&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1465847899084-d164df4dedc6?w=500&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=500&auto=format&fit=crop&q=80'
+  '/artwork.png'
 ];
 
 const COLOR_PALETTE = [
-  '#4338ca', '#854d0e', '#be123c', '#047857', '#6d28d9',
+  '#f3cbc4', '#2dd4bf', '#ece3d6', '#b6bdac', '#fbcfe8'
+];
   '#b45309', '#0f766e', '#1d4ed8', '#be185d', '#374151'
 ];
 

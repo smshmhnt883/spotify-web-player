@@ -38,6 +38,9 @@ export const AlbumsSlideBar: React.FC<AlbumsSlideBarProps> = ({
 
   // Primary active album (or first available playlist)
   const primaryAlbum = playlists.find(p => p.id === activePlaylistId) || playlists[0];
+  const albumCover = !primaryAlbum?.coverUrl || primaryAlbum.coverUrl.includes('photo-1470225620780') || primaryAlbum.coverUrl.includes('unsplash.com')
+    ? '/artwork.png'
+    : primaryAlbum.coverUrl;
 
   const handleSelectAlbum = (album: Playlist) => {
     navigateTo('home', album.id);
@@ -99,7 +102,7 @@ export const AlbumsSlideBar: React.FC<AlbumsSlideBarProps> = ({
             >
               <div className="relative aspect-square w-full rounded-xl overflow-hidden mb-3 bg-neutral-900 shadow-md">
                 <img
-                  src={primaryAlbum.coverUrl || '/artwork.png'}
+                  src={albumCover}
                   alt={primaryAlbum.title}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                 />

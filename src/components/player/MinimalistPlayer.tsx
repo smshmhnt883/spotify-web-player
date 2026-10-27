@@ -71,7 +71,15 @@ export const MinimalistPlayer: React.FC<MinimalistPlayerProps> = ({
   const activePlaylist = playlists.find(p => p.id === activePlaylistId) || playlists[0];
   const albumTitle = currentTrack?.album || activePlaylist?.title || 'CLOUD VAULT FAVORITES';
   const artistName = currentTrack?.artist || 'VAULTX ARTIST';
-  const displayCover = currentTrack?.coverUrl || '/artwork.png';
+  
+  const getTrackCover = (cover?: string) => {
+    if (!cover || cover.includes('photo-1470225620780') || cover.includes('unsplash.com')) {
+      return '/artwork.png';
+    }
+    return cover;
+  };
+
+  const displayCover = getTrackCover(currentTrack?.coverUrl);
   const isLiked = currentTrack ? likedTrackIds.includes(currentTrack.id) : false;
 
   // Next up tracks: tracks following current track in context
@@ -263,7 +271,7 @@ export const MinimalistPlayer: React.FC<MinimalistPlayerProps> = ({
               <div className="flex items-center justify-between p-2.5 rounded-xl bg-white/5 border border-white/10 shadow-sm mb-5 transition">
                 <div className="flex items-center gap-3 min-w-0">
                   <img
-                    src={currentTrack.coverUrl}
+                    src={getTrackCover(currentTrack.coverUrl)}
                     alt={currentTrack.title}
                     className="w-11 h-11 rounded-lg object-cover flex-shrink-0 shadow-md"
                   />
@@ -316,7 +324,7 @@ export const MinimalistPlayer: React.FC<MinimalistPlayerProps> = ({
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       <img
-                        src={track.coverUrl}
+                        src={getTrackCover(track.coverUrl)}
                         alt={track.title}
                         className="w-10 h-10 rounded-lg object-cover flex-shrink-0 bg-neutral-800"
                       />
