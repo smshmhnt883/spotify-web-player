@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { usePlayerStore } from '../../store/usePlayerStore';
 import { formatTime } from '../../utils/formatTime';
+import { AudioReactiveBackground } from '../visualizer/AudioReactiveBackground';
 import type { Track } from '../../types';
 
 interface MinimalistPlayerProps {
@@ -98,40 +99,41 @@ export const MinimalistPlayer: React.FC<MinimalistPlayerProps> = ({
 
   return (
     <div className="relative w-full h-screen bg-[#07090b] flex items-center justify-center p-2 sm:p-4 md:p-6 lg:p-8 select-none overflow-hidden">
-      {/* 1. Aerial Forest Wallpaper Background (Matches Reference Image) */}
-      <div
-        className="absolute inset-0 bg-cover bg-center opacity-65 scale-105 pointer-events-none transition-all duration-700"
-        style={{
-          backgroundImage: `url('https://images.unsplash.com/photo-1511497584788-87676104235f?auto=format&fit=crop&w=2400&q=80')`
-        }}
-      />
-      <div className="absolute inset-0 bg-black/45 backdrop-blur-[2px] pointer-events-none" />
+      {/* 1. Audio-Reactive Background Lighting & Dynamic Particle Visualizer */}
+      <AudioReactiveBackground />
 
-      {/* 2. Floating macOS Style Player Window */}
-      <div className="relative z-10 w-full max-w-6xl h-full max-h-[860px] bg-[#0c0d10]/95 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.85)] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-300">
+      {/* 2. Floating Minimalist Player Window */}
+      <div 
+        className="relative z-10 w-full max-w-6xl h-full max-h-[860px] bg-[#0c0d10]/95 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.85)] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-300 transition-shadow duration-500"
+        style={{
+          boxShadow: isPlaying 
+            ? `0 25px 80px -15px ${currentTrack?.dominantColor ? currentTrack.dominantColor + '40' : 'rgba(45,212,191,0.25)'}`
+            : '0 25px 60px -15px rgba(0,0,0,0.85)'
+        }}
+      >
         
         {/* TOP BAR / WINDOW CHROME */}
-        <header className="h-12 px-4 sm:px-6 border-b border-white/5 flex items-center justify-between flex-shrink-0 bg-[#090a0d]/80">
-          {/* Left: Window Dots & Triple Tap Bar */}
-          <div className="flex items-center gap-4">
-            {/* macOS Window Traffic Lights */}
-            <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-[#ff5f56] inline-block shadow-sm" />
-              <span className="w-3 h-3 rounded-full bg-[#ffbd2e] inline-block shadow-sm" />
-              <span className="w-3 h-3 rounded-full bg-[#27c93f] inline-block shadow-sm" />
-            </div>
-
-            {/* Triple Tap Bar / Hamburger Menu Button */}
+        <header className="h-13 px-4 sm:px-6 border-b border-white/5 flex items-center justify-between flex-shrink-0 bg-[#090a0d]/85">
+          {/* Left: Enhanced Albums Slide Bar Trigger (Clean Minimalist Design, No 3 Dots) */}
+          <div className="flex items-center gap-3">
             <button
               onClick={onToggleAlbumsSlideBar}
-              className="flex items-center gap-2 px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-neutral-300 hover:text-white transition group border border-white/5"
+              className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-neutral-200 hover:text-white transition group border border-white/5 shadow-sm active:scale-95"
               title="Open Albums Slide Bar"
             >
               <Menu size={16} className="text-[#2dd4bf] group-hover:scale-110 transition-transform" />
-              <span className="text-xs font-semibold hidden sm:inline tracking-wide">
+              <span className="text-xs font-bold tracking-wider uppercase text-white">
                 Albums
               </span>
             </button>
+
+            {/* Audio-Reactive Beat Indicator */}
+            {isPlaying && (
+              <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#2dd4bf]/10 border border-[#2dd4bf]/25 text-[#2dd4bf] text-[10px] font-semibold tracking-wider">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#2dd4bf] animate-ping inline-block" />
+                <span>BEAT REACTIVE</span>
+              </div>
+            )}
           </div>
 
           {/* Right: Cloud Vault & Utility Badges */}
