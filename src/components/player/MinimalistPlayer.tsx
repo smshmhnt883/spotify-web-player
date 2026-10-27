@@ -107,13 +107,13 @@ export const MinimalistPlayer: React.FC<MinimalistPlayerProps> = ({
   };
 
   return (
-    <div className="relative w-full h-screen bg-[#07090b] flex items-center justify-center p-2 sm:p-4 md:p-6 lg:p-8 select-none overflow-hidden">
+    <div className="relative w-full h-screen bg-[#07090b] flex items-center justify-center p-2 sm:p-3 md:p-4 lg:p-6 select-none overflow-hidden">
       {/* 1. Audio-Reactive Background Lighting & Dynamic Particle Visualizer */}
       <AudioReactiveBackground />
 
       {/* 2. Floating Minimalist Player Window */}
       <div 
-        className="relative z-10 w-full max-w-6xl h-full max-h-[860px] bg-[#0c0d10]/95 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.85)] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-300 transition-shadow duration-500"
+        className="relative z-10 w-full max-w-6xl xl:max-w-7xl h-full max-h-[880px] lg:max-h-[900px] bg-[#0c0d10]/95 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.85)] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-300 transition-shadow duration-500"
         style={{
           boxShadow: isPlaying 
             ? `0 25px 80px -15px ${currentTrack?.dominantColor ? currentTrack.dominantColor + '40' : 'rgba(45,212,191,0.25)'}`
@@ -187,9 +187,9 @@ export const MinimalistPlayer: React.FC<MinimalistPlayerProps> = ({
         {/* MAIN BODY: 2-COLUMN VIEW (ARTWORK ON LEFT, MUSICS ON RIGHT) */}
         <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
           
-          {/* COLUMN 1: LARGE HERO ALBUM ARTWORK DISPLAY (LEFT) */}
-          <section className="flex-1 flex items-center justify-center p-4 sm:p-6 lg:p-8 overflow-hidden bg-[#090a0d]/40">
-            <div className="relative aspect-square w-full max-w-[460px] lg:max-w-[500px] rounded-2xl overflow-hidden shadow-2xl border border-white/10 bg-[#ece3d6] group flex flex-col justify-between p-6 sm:p-7 select-none transition-transform duration-300">
+          {/* COLUMN 1: LARGE HERO ALBUM ARTWORK DISPLAY (LEFT - ENLARGED TO FILL SPACE) */}
+          <section className="flex-1 flex items-center justify-center p-3 sm:p-4 lg:p-6 overflow-hidden bg-[#090a0d]/40">
+            <div className="relative aspect-square w-full max-w-[620px] lg:max-w-[680px] xl:max-w-[720px] max-h-full rounded-2xl overflow-hidden shadow-2xl border border-white/10 bg-[#ece3d6] group flex flex-col justify-between p-6 sm:p-8 select-none transition-all duration-300">
               
               {/* Actual Album Artwork Image Background */}
               <img
@@ -257,7 +257,7 @@ export const MinimalistPlayer: React.FC<MinimalistPlayerProps> = ({
           </section>
 
           {/* COLUMN 2: MUSICS / QUEUE (RIGHT SIDE) */}
-          <section className="w-full md:w-[380px] lg:w-[420px] flex flex-col p-4 sm:p-6 lg:p-7 border-t md:border-t-0 md:border-l border-white/5 overflow-hidden bg-[#0c0d10]/95">
+          <section className="w-full md:w-[340px] lg:w-[360px] xl:w-[380px] flex flex-col p-4 sm:p-5 lg:p-6 border-t md:border-t-0 md:border-l border-white/5 overflow-hidden bg-[#0c0d10]/95 flex-shrink-0">
             
             {/* 1. Header: PLAYING FROM */}
             <div className="mb-3">
