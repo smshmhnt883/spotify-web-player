@@ -16,12 +16,14 @@ import {
   ChevronDown,
   Cloud,
   Maximize2,
-  Minimize2
+  Minimize2,
+  Mic2
 } from 'lucide-react';
 import { usePlayerStore } from '../../store/usePlayerStore';
 import { formatTime } from '../../utils/formatTime';
 import { sanitizeTrack } from '../../utils/trackSanitizer';
 import { AudioReactiveBackground } from '../visualizer/AudioReactiveBackground';
+import { NowPlayingDetailModal } from '../modals/NowPlayingDetailModal';
 import type { Track } from '../../types';
 
 interface MinimalistPlayerProps {
@@ -66,6 +68,7 @@ export const MinimalistPlayer: React.FC<MinimalistPlayerProps> = ({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showVolumeSlider, setShowVolumeSlider] = useState(false);
   const [mobileTab, setMobileTab] = useState<'player' | 'queue'>('player');
+  const [isNowPlayingModalOpen, setIsNowPlayingModalOpen] = useState(false);
 
   const scrubberRef = useRef<HTMLDivElement | null>(null);
   const mobileScrubberRef = useRef<HTMLDivElement | null>(null);
@@ -143,18 +146,18 @@ export const MinimalistPlayer: React.FC<MinimalistPlayerProps> = ({
         
         {/* TOP BAR / WINDOW CHROME */}
         <header className="h-14 px-3 sm:px-6 border-b border-white/5 flex items-center justify-between flex-shrink-0 bg-[#090a0d]/90">
-          {/* Left: Enhanced Albums Slide Bar Trigger (Hides smoothly when drawer is open to prevent ✕ button bleed) */}
+          {/* Left: Enhanced Library & Albums Explorer Trigger */}
           <div className="flex items-center gap-2 sm:gap-3">
             <button
               onClick={onToggleAlbumsSlideBar}
               className={`flex items-center gap-2 px-2.5 sm:px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-neutral-200 hover:text-white transition-opacity duration-200 group border border-white/5 shadow-sm active:scale-95 ${
                 isSlideBarOpen ? 'opacity-0 pointer-events-none' : 'opacity-100 pointer-events-auto'
               }`}
-              title="Open Albums Slide Bar"
+              title="Open Library Explorer (Albums, Artists, Tracks, Favorites)"
             >
               <Menu size={16} className="text-white group-hover:text-[#EAA599] group-hover:scale-110 transition-all" />
               <span className="text-xs font-bold tracking-wider uppercase text-white">
-                Albums
+                Library
               </span>
             </button>
 
@@ -230,76 +233,110 @@ export const MinimalistPlayer: React.FC<MinimalistPlayerProps> = ({
         {/* ============================================================== */}
         <div className="hidden md:flex flex-1 flex-row overflow-hidden">
           
-          {/* COLUMN 1: LARGE HERO ALBUM ARTWORK DISPLAY (LEFT - ENLARGED TO FILL SPACE) */}
+          {/* COLUMN 1: ALIVE HERO ALBUM ARTWORK DISPLAY (LEFT - WITH ORBITAL ELEMENTS) */}
           <section className="flex-1 flex items-center justify-center p-3 sm:p-4 lg:p-6 overflow-hidden bg-[#090a0d]/40">
-            <div className="relative aspect-square w-full max-w-[620px] lg:max-w-[680px] xl:max-w-[720px] max-h-full rounded-2xl overflow-hidden shadow-2xl border border-white/10 bg-[#ece3d6] group flex flex-col justify-between p-6 sm:p-8 select-none transition-all duration-300">
+            <div className="relative flex items-center justify-center max-w-[620px] lg:max-w-[680px] xl:max-w-[720px] w-full aspect-square">
               
-              {/* Actual Album Artwork Image Background */}
-              <img
-                src={displayCover}
-                alt={cleanCurrentTrack?.title || 'Album Artwork'}
-                className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-              />
-
-              {/* Subtle Ambient Vignette Overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/40 pointer-events-none" />
-
-              {/* Artwork Top Header: Geometric Logo & Album Title */}
-              <div className="relative z-10 flex items-center justify-between w-full">
-                {/* Geometric Logo */}
-                <div
-                  onClick={onToggleAlbumsSlideBar}
-                  className="w-9 h-9 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center cursor-pointer hover:scale-110 active:scale-95 transition text-white border border-white/20 shadow-lg"
-                  title="Click to view Albums"
-                >
-                  <div className="grid grid-cols-2 gap-0.5">
-                    <span className="w-1.5 h-1.5 bg-[#f3cbc4] rounded-full" />
-                    <span className="w-1.5 h-1.5 bg-white rounded-full" />
-                    <span className="w-1.5 h-1.5 bg-white rounded-full" />
-                    <span className="w-1.5 h-1.5 bg-[#f3cbc4] rounded-full" />
-                  </div>
-                </div>
-
-                {/* Album Title */}
-                <span className="text-xs sm:text-sm font-black tracking-widest text-white uppercase drop-shadow-md bg-black/40 backdrop-blur-md px-3.5 py-1 rounded-full border border-white/10">
-                  {albumTitle}
-                </span>
-              </div>
-
-              {/* Center Play/Pause Trigger Hover Overlay */}
+              {/* 1. Subtle Orbital Ring with Traveling Cosmic Starlet */}
               <div
-                onClick={togglePlay}
-                className="absolute inset-0 flex items-center justify-center cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10"
+                className={`absolute -inset-4 sm:-inset-6 rounded-full border border-[#EAA599]/20 pointer-events-none transition-opacity duration-1000 ${
+                  isPlaying ? 'opacity-80 animate-orbital-spin' : 'opacity-20'
+                }`}
               >
-                <div className="w-16 h-16 rounded-full bg-[#f3cbc4] hover:bg-white text-black flex items-center justify-center shadow-2xl transform scale-90 group-hover:scale-100 transition-transform">
-                  {isPlaying ? (
-                    <Pause size={28} className="fill-black" />
-                  ) : (
-                    <Play size={28} className="fill-black ml-1" />
-                  )}
-                </div>
+                <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-[#f3cbc4] shadow-[0_0_12px_#f3cbc4]" />
+                <div className="absolute -bottom-1 left-1/3 w-2 h-2 rounded-full bg-white/70 shadow-[0_0_8px_white]" />
               </div>
 
-              {/* Artwork Bottom Header: Artist Name */}
-              <div className="relative z-10 flex items-end justify-between w-full">
-                <span className="text-xs sm:text-sm font-black tracking-widest text-white uppercase drop-shadow-md bg-black/40 backdrop-blur-md px-3.5 py-1 rounded-full border border-white/10">
-                  {artistName}
-                </span>
+              {/* 2. Counter-Orbiting Faint Stardust Ring */}
+              <div
+                className={`absolute -inset-8 sm:-inset-11 rounded-full border border-dashed border-white/10 pointer-events-none transition-opacity duration-1000 ${
+                  isPlaying ? 'opacity-60 animate-orbital-counter' : 'opacity-0'
+                }`}
+              >
+                <div className="absolute top-1/4 -right-1 w-2 h-2 rounded-full bg-[#EAA599] shadow-[0_0_8px_#EAA599]" />
+              </div>
 
-                {/* Pulsing Audio Wave Indicator */}
-                {isPlaying && (
-                  <div className="flex items-end gap-0.5 h-5 px-2 py-1 rounded-full bg-black/40 backdrop-blur-md border border-white/10">
-                    <span className="w-0.5 h-3 bg-[#f3cbc4] rounded-full animate-pulse" />
-                    <span className="w-0.5 h-4 bg-white/90 rounded-full animate-bounce delay-75" />
-                    <span className="w-0.5 h-2 bg-[#f3cbc4] rounded-full animate-pulse delay-150" />
-                    <span className="w-0.5 h-4 bg-white/90 rounded-full animate-bounce delay-100" />
+              {/* 3. Hero Artwork Card (Alive Floating & Breathing Animation) */}
+              <div
+                className={`relative aspect-square w-full rounded-2xl overflow-hidden shadow-2xl border border-white/10 bg-[#ece3d6] group flex flex-col justify-between p-6 sm:p-8 select-none transition-all duration-700 ${
+                  isPlaying ? 'animate-artwork-float shadow-[0_25px_70px_-15px_rgba(234,165,153,0.3)]' : 'shadow-2xl'
+                }`}
+              >
+                {/* Actual Album Artwork Image Background */}
+                <img
+                  src={displayCover}
+                  alt={cleanCurrentTrack?.title || 'Album Artwork'}
+                  className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                />
+
+                {/* Subtle Ambient Vignette Overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/40 pointer-events-none" />
+
+                {/* Artwork Top Header: Geometric Logo & Album Title */}
+                <div className="relative z-10 flex items-center justify-between w-full">
+                  {/* Geometric Logo */}
+                  <div
+                    onClick={onToggleAlbumsSlideBar}
+                    className="w-9 h-9 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center cursor-pointer hover:scale-110 active:scale-95 transition text-white border border-white/20 shadow-lg"
+                    title="Click to view Library"
+                  >
+                    <div className="grid grid-cols-2 gap-0.5">
+                      <span className="w-1.5 h-1.5 bg-[#f3cbc4] rounded-full" />
+                      <span className="w-1.5 h-1.5 bg-white rounded-full" />
+                      <span className="w-1.5 h-1.5 bg-white rounded-full" />
+                      <span className="w-1.5 h-1.5 bg-[#f3cbc4] rounded-full" />
+                    </div>
                   </div>
-                )}
+
+                  {/* Album Title */}
+                  <span className="text-xs sm:text-sm font-black tracking-widest text-white uppercase drop-shadow-md bg-black/40 backdrop-blur-md px-3.5 py-1 rounded-full border border-white/10">
+                    {albumTitle}
+                  </span>
+                </div>
+
+                {/* Center Play/Pause Trigger Hover Overlay */}
+                <div
+                  onClick={togglePlay}
+                  className="absolute inset-0 flex items-center justify-center cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10"
+                >
+                  <div className="w-16 h-16 rounded-full bg-[#f3cbc4] hover:bg-white text-black flex items-center justify-center shadow-2xl transform scale-90 group-hover:scale-100 transition-transform">
+                    {isPlaying ? (
+                      <Pause size={28} className="fill-black" />
+                    ) : (
+                      <Play size={28} className="fill-black ml-1" />
+                    )}
+                  </div>
+                </div>
+
+                {/* Artwork Bottom Header: Artist Name & Lyrics/Info Trigger */}
+                <div className="relative z-10 flex items-end justify-between w-full">
+                  <span className="text-xs sm:text-sm font-black tracking-widest text-white uppercase drop-shadow-md bg-black/40 backdrop-blur-md px-3.5 py-1 rounded-full border border-white/10">
+                    {artistName}
+                  </span>
+
+                  {/* Right Button: Pulsing Audio Wave + Details Trigger */}
+                  <button
+                    onClick={() => setIsNowPlayingModalOpen(true)}
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/50 hover:bg-black/75 backdrop-blur-md border border-white/15 text-white hover:text-[#EAA599] transition active:scale-95 shadow-md group/btn"
+                    title="View Lyrics, Credits & Visualizer"
+                  >
+                    {isPlaying ? (
+                      <div className="flex items-end gap-0.5 h-3.5">
+                        <span className="w-0.5 h-2.5 bg-[#f3cbc4] rounded-full animate-pulse" />
+                        <span className="w-0.5 h-3.5 bg-white/90 rounded-full animate-bounce delay-75" />
+                        <span className="w-0.5 h-1.5 bg-[#f3cbc4] rounded-full animate-pulse delay-150" />
+                      </div>
+                    ) : (
+                      <Mic2 size={13} className="text-neutral-300 group-hover/btn:text-[#EAA599]" />
+                    )}
+                    <span className="text-[11px] font-bold tracking-wider uppercase">Info</span>
+                  </button>
+                </div>
               </div>
             </div>
           </section>
 
-          {/* COLUMN 2: MUSICS / QUEUE (RIGHT SIDE) */}
+          {/* COLUMN 2: MUSICS / QUEUE (RIGHT SIDE - ENHANCED INTERACTIVITY) */}
           <section className="w-full md:w-[340px] lg:w-[360px] xl:w-[380px] flex flex-col p-4 sm:p-5 lg:p-6 border-l border-white/5 overflow-hidden bg-[#0c0d10]/95 flex-shrink-0">
             
             {/* 1. Header: PLAYING FROM */}
@@ -311,11 +348,15 @@ export const MinimalistPlayer: React.FC<MinimalistPlayerProps> = ({
 
             {/* 2. Currently Playing Track Card (Active Track Indicator with Equalizer / Glowing Border) */}
             {cleanCurrentTrack && (
-              <div className={`flex items-center justify-between p-2.5 rounded-xl transition-all duration-300 mb-5 ${
-                isPlaying
-                  ? 'bg-white/[0.08] border border-[#EAA599]/40 shadow-[0_0_20px_-5px_rgba(234,165,153,0.3)]'
-                  : 'bg-white/5 border border-white/10 shadow-sm'
-              }`}>
+              <div 
+                onClick={() => setIsNowPlayingModalOpen(true)}
+                className={`flex items-center justify-between p-2.5 rounded-xl transition-all duration-300 mb-5 cursor-pointer ${
+                  isPlaying
+                    ? 'bg-white/[0.08] border border-[#EAA599]/40 shadow-[0_0_20px_-5px_rgba(234,165,153,0.3)]'
+                    : 'bg-white/5 border border-white/10 shadow-sm'
+                }`}
+                title="Click to view lyrics & details"
+              >
                 <div className="flex items-center gap-3 min-w-0">
                   <img
                     src={getTrackCover(cleanCurrentTrack.coverUrl)}
@@ -336,7 +377,10 @@ export const MinimalistPlayer: React.FC<MinimalistPlayerProps> = ({
 
                 {/* Active Indicator Button: Equalizer when playing / Pause on hover / Play when paused */}
                 <div
-                  onClick={togglePlay}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    togglePlay();
+                  }}
                   className="group/btn relative w-8 h-8 rounded-full bg-white/10 hover:bg-[#EAA599] text-white hover:text-black flex items-center justify-center flex-shrink-0 cursor-pointer transition shadow-sm"
                   title={isPlaying ? 'Pause' : 'Play'}
                 >
@@ -368,7 +412,7 @@ export const MinimalistPlayer: React.FC<MinimalistPlayerProps> = ({
               </span>
             </div>
 
-            {/* 4. Scrollable List of Tracks (With Right-Aligned Durations) */}
+            {/* 4. Scrollable List of Tracks (Enhanced Hover Background, Selected State & Durations) */}
             <div className="flex-1 overflow-y-auto space-y-1 pr-1 custom-scrollbar">
               {nextUpTracks.length === 0 ? (
                 <div className="text-center py-10 text-xs text-neutral-500">
@@ -377,21 +421,42 @@ export const MinimalistPlayer: React.FC<MinimalistPlayerProps> = ({
               ) : (
                 nextUpTracks.map((rawTrack) => {
                   const track = sanitizeTrack(rawTrack);
+                  const isSelected = currentTrack?.id === track.id;
+                  const isThisPlaying = isSelected && isPlaying;
+
                   return (
                     <div
                       key={track.id}
                       onClick={() => playTrack(track)}
-                      className="group flex items-center justify-between p-2 rounded-xl hover:bg-white/5 transition-all duration-150 cursor-pointer"
+                      className={`group relative flex items-center justify-between p-2.5 rounded-xl border transition-all duration-200 cursor-pointer active:scale-[0.99] ${
+                        isSelected
+                          ? 'bg-white/[0.09] border-[#EAA599]/35 shadow-sm'
+                          : 'border-transparent hover:border-white/10 hover:bg-white/[0.07] hover:shadow-md'
+                      }`}
                     >
-                      <div className="flex items-center gap-3 min-w-0">
-                        <img
-                          src={getTrackCover(track.coverUrl)}
-                          alt={track.title}
-                          className="w-10 h-10 rounded-lg object-cover flex-shrink-0 bg-neutral-800"
-                        />
+                      {/* Left Active Accent Pill */}
+                      {isSelected && (
+                        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-7 rounded-r-full bg-[#EAA599]" />
+                      )}
+
+                      <div className="flex items-center gap-3 min-w-0 pl-1">
+                        {/* Cover with Hover Play Overlay */}
+                        <div className="relative w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 bg-neutral-800 shadow-sm">
+                          <img
+                            src={getTrackCover(track.coverUrl)}
+                            alt={track.title}
+                            className="w-full h-full object-cover"
+                          />
+                          <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                            <Play size={14} className="fill-white text-white ml-0.5" />
+                          </div>
+                        </div>
+
                         <div className="min-w-0 pr-2">
-                          {/* Title: Bold White */}
-                          <span className="text-sm font-semibold text-white group-hover:text-white truncate block">
+                          {/* Title: Bold White (Primary) */}
+                          <span className={`text-sm font-semibold truncate block transition-colors ${
+                            isSelected ? 'text-[#EAA599]' : 'text-white group-hover:text-white'
+                          }`}>
                             {track.title}
                           </span>
                           {/* Artist: Muted Grey */}
@@ -401,11 +466,20 @@ export const MinimalistPlayer: React.FC<MinimalistPlayerProps> = ({
                         </div>
                       </div>
 
-                      {/* Right-aligned Duration + Hover Remove */}
+                      {/* Right-aligned Duration or Equalizer + Hover Remove */}
                       <div className="flex items-center gap-2 flex-shrink-0 pl-2">
-                        <span className="text-xs text-neutral-400 group-hover:text-neutral-300 tabular-nums font-mono">
-                          {formatTime(track.durationSec || 180)}
-                        </span>
+                        {isThisPlaying ? (
+                          <div className="flex items-end gap-0.5 h-3 px-1">
+                            <span className="w-0.5 h-3 bg-[#EAA599] rounded-full animate-pulse" />
+                            <span className="w-0.5 h-2 bg-white rounded-full animate-bounce delay-75" />
+                            <span className="w-0.5 h-3 bg-[#EAA599] rounded-full animate-pulse delay-150" />
+                          </div>
+                        ) : (
+                          <span className="text-xs text-neutral-400 group-hover:text-neutral-300 tabular-nums font-mono">
+                            {formatTime(track.durationSec || 180)}
+                          </span>
+                        )}
+
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
@@ -433,75 +507,94 @@ export const MinimalistPlayer: React.FC<MinimalistPlayerProps> = ({
             /* MOBILE TAB 1: PLAYER VIEW */
             <div className="flex-1 flex flex-col justify-between p-4 overflow-y-auto">
               
-              {/* Centered Artwork Display */}
+              {/* Centered Artwork Display with Alive Orbital Ring */}
               <div className="flex-1 flex items-center justify-center py-2 min-h-0">
-                <div className="relative aspect-square w-full max-w-[290px] xs:max-w-[320px] rounded-2xl overflow-hidden shadow-2xl border border-white/10 bg-[#ece3d6] flex flex-col justify-between p-4 select-none transition-all duration-300">
+                <div className="relative flex items-center justify-center w-full max-w-[290px] xs:max-w-[320px] aspect-square">
                   
-                  {/* Artwork Image */}
-                  <img
-                    src={displayCover}
-                    alt={cleanCurrentTrack?.title || 'Album Artwork'}
-                    className="absolute inset-0 w-full h-full object-cover"
-                  />
+                  {/* Subtle Orbital Ring */}
+                  <div
+                    className={`absolute -inset-3 rounded-full border border-[#EAA599]/20 pointer-events-none transition-opacity duration-1000 ${
+                      isPlaying ? 'opacity-80 animate-orbital-spin' : 'opacity-20'
+                    }`}
+                  >
+                    <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-[#f3cbc4] shadow-[0_0_8px_#f3cbc4]" />
+                  </div>
 
-                  {/* Subtle Ambient Vignette */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/40 pointer-events-none" />
+                  {/* Artwork Card with Alive Floating Motion */}
+                  <div
+                    className={`relative aspect-square w-full rounded-2xl overflow-hidden shadow-2xl border border-white/10 bg-[#ece3d6] flex flex-col justify-between p-4 select-none transition-all duration-700 ${
+                      isPlaying ? 'animate-artwork-float shadow-[0_20px_50px_-10px_rgba(234,165,153,0.3)]' : 'shadow-2xl'
+                    }`}
+                  >
+                    {/* Artwork Image */}
+                    <img
+                      src={displayCover}
+                      alt={cleanCurrentTrack?.title || 'Album Artwork'}
+                      className="absolute inset-0 w-full h-full object-cover"
+                    />
 
-                  {/* Artwork Top Header */}
-                  <div className="relative z-10 flex items-center justify-between w-full">
+                    {/* Subtle Ambient Vignette */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/40 pointer-events-none" />
+
+                    {/* Artwork Top Header */}
+                    <div className="relative z-10 flex items-center justify-between w-full">
+                      <div
+                        onClick={onToggleAlbumsSlideBar}
+                        className="w-8 h-8 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center cursor-pointer hover:scale-110 active:scale-95 transition text-white border border-white/20 shadow-lg"
+                        title="Click to view Library"
+                      >
+                        <div className="grid grid-cols-2 gap-0.5">
+                          <span className="w-1.5 h-1.5 bg-[#f3cbc4] rounded-full" />
+                          <span className="w-1.5 h-1.5 bg-white rounded-full" />
+                          <span className="w-1.5 h-1.5 bg-white rounded-full" />
+                          <span className="w-1.5 h-1.5 bg-[#f3cbc4] rounded-full" />
+                        </div>
+                      </div>
+
+                      <span className="text-[10px] font-black tracking-widest text-white uppercase drop-shadow-md bg-black/40 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 max-w-[150px] truncate">
+                        {albumTitle}
+                      </span>
+                    </div>
+
+                    {/* Center Play/Pause Touch Overlay */}
                     <div
-                      onClick={onToggleAlbumsSlideBar}
-                      className="w-8 h-8 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center cursor-pointer hover:scale-110 active:scale-95 transition text-white border border-white/20 shadow-lg"
-                      title="Click to view Albums"
+                      onClick={togglePlay}
+                      className="absolute inset-0 flex items-center justify-center cursor-pointer z-10"
                     >
-                      <div className="grid grid-cols-2 gap-0.5">
-                        <span className="w-1.5 h-1.5 bg-[#f3cbc4] rounded-full" />
-                        <span className="w-1.5 h-1.5 bg-white rounded-full" />
-                        <span className="w-1.5 h-1.5 bg-white rounded-full" />
-                        <span className="w-1.5 h-1.5 bg-[#f3cbc4] rounded-full" />
+                      <div className="w-14 h-14 rounded-full bg-[#f3cbc4]/90 hover:bg-white text-black flex items-center justify-center shadow-2xl transform active:scale-90 transition-transform">
+                        {isPlaying ? (
+                          <Pause size={24} className="fill-black" />
+                        ) : (
+                          <Play size={24} className="fill-black ml-1" />
+                        )}
                       </div>
                     </div>
 
-                    <span className="text-[10px] font-black tracking-widest text-white uppercase drop-shadow-md bg-black/40 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 max-w-[150px] truncate">
-                      {albumTitle}
-                    </span>
-                  </div>
+                    {/* Artwork Bottom Header */}
+                    <div className="relative z-10 flex items-end justify-between w-full">
+                      <span className="text-[10px] font-black tracking-widest text-white uppercase drop-shadow-md bg-black/40 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 max-w-[150px] truncate">
+                        {artistName}
+                      </span>
 
-                  {/* Center Play/Pause Touch Overlay */}
-                  <div
-                    onClick={togglePlay}
-                    className="absolute inset-0 flex items-center justify-center cursor-pointer z-10"
-                  >
-                    <div className="w-14 h-14 rounded-full bg-[#f3cbc4]/90 hover:bg-white text-black flex items-center justify-center shadow-2xl transform active:scale-90 transition-transform">
-                      {isPlaying ? (
-                        <Pause size={24} className="fill-black" />
-                      ) : (
-                        <Play size={24} className="fill-black ml-1" />
+                      {isPlaying && (
+                        <div className="flex items-end gap-0.5 h-4 px-2 py-0.5 rounded-full bg-black/40 backdrop-blur-md border border-white/10">
+                          <span className="w-0.5 h-2.5 bg-[#f3cbc4] rounded-full animate-pulse" />
+                          <span className="w-0.5 h-3.5 bg-white/90 rounded-full animate-bounce delay-75" />
+                          <span className="w-0.5 h-1.5 bg-[#f3cbc4] rounded-full animate-pulse delay-150" />
+                          <span className="w-0.5 h-3.5 bg-white/90 rounded-full animate-bounce delay-100" />
+                        </div>
                       )}
                     </div>
-                  </div>
-
-                  {/* Artwork Bottom Header */}
-                  <div className="relative z-10 flex items-end justify-between w-full">
-                    <span className="text-[10px] font-black tracking-widest text-white uppercase drop-shadow-md bg-black/40 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 max-w-[150px] truncate">
-                      {artistName}
-                    </span>
-
-                    {isPlaying && (
-                      <div className="flex items-end gap-0.5 h-4 px-2 py-0.5 rounded-full bg-black/40 backdrop-blur-md border border-white/10">
-                        <span className="w-0.5 h-2.5 bg-[#f3cbc4] rounded-full animate-pulse" />
-                        <span className="w-0.5 h-3.5 bg-white/90 rounded-full animate-bounce delay-75" />
-                        <span className="w-0.5 h-1.5 bg-[#f3cbc4] rounded-full animate-pulse delay-150" />
-                        <span className="w-0.5 h-3.5 bg-white/90 rounded-full animate-bounce delay-100" />
-                      </div>
-                    )}
                   </div>
                 </div>
               </div>
 
               {/* Track Title, Artist & Like Info */}
-              <div className="w-full max-w-[340px] mx-auto flex items-center justify-between px-2 py-2">
-                <div className="min-w-0 pr-3">
+              <div className="w-full max-w-[340px] mx-auto flex items-center justify-between px-2 pt-2">
+                <div 
+                  onClick={() => setIsNowPlayingModalOpen(true)}
+                  className="min-w-0 pr-3 cursor-pointer"
+                >
                   <h3 className="text-base font-bold text-white truncate drop-shadow-sm">
                     {cleanCurrentTrack?.title || 'No track selected'}
                   </h3>
@@ -519,6 +612,20 @@ export const MinimalistPlayer: React.FC<MinimalistPlayerProps> = ({
                 >
                   <Heart size={20} className={isLiked ? 'fill-red-500 text-red-500' : ''} />
                 </button>
+              </div>
+
+              {/* Mobile Lyrics & Credits Button Chip */}
+              <div className="w-full max-w-[340px] mx-auto flex items-center justify-between px-2 pt-1 pb-1">
+                <button
+                  onClick={() => setIsNowPlayingModalOpen(true)}
+                  className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 hover:bg-white/10 text-neutral-300 border border-white/10 text-xs font-semibold active:scale-95"
+                >
+                  <Mic2 size={12} className="text-[#EAA599]" />
+                  <span>Lyrics & Credits</span>
+                </button>
+                <span className="text-[10px] text-neutral-500 font-mono">
+                  320 KBPS • MP3
+                </span>
               </div>
 
               {/* Scrubber Timeline & Playback Controls on Mobile */}
@@ -689,7 +796,7 @@ export const MinimalistPlayer: React.FC<MinimalistPlayerProps> = ({
                   </span>
                 </div>
 
-                {/* Track List */}
+                {/* Track List with Interactive States */}
                 <div className="space-y-1 pb-16">
                   {nextUpTracks.length === 0 ? (
                     <div className="text-center py-12 text-xs text-neutral-500">
@@ -698,11 +805,18 @@ export const MinimalistPlayer: React.FC<MinimalistPlayerProps> = ({
                   ) : (
                     nextUpTracks.map((rawTrack) => {
                       const track = sanitizeTrack(rawTrack);
+                      const isSelected = currentTrack?.id === track.id;
+                      const isThisPlaying = isSelected && isPlaying;
+
                       return (
                         <div
                           key={track.id}
                           onClick={() => playTrack(track)}
-                          className="flex items-center justify-between p-2.5 rounded-xl hover:bg-white/5 active:bg-white/10 transition cursor-pointer"
+                          className={`flex items-center justify-between p-2.5 rounded-xl border transition-all cursor-pointer ${
+                            isSelected
+                              ? 'bg-white/10 border-[#EAA599]/35'
+                              : 'border-transparent hover:bg-white/5 active:bg-white/10'
+                          }`}
                         >
                           <div className="flex items-center gap-3 min-w-0">
                             <img
@@ -711,7 +825,7 @@ export const MinimalistPlayer: React.FC<MinimalistPlayerProps> = ({
                               className="w-10 h-10 rounded-lg object-cover flex-shrink-0 bg-neutral-800"
                             />
                             <div className="min-w-0 pr-2">
-                              <span className="text-sm font-semibold text-white truncate block">
+                              <span className={`text-sm font-semibold truncate block ${isSelected ? 'text-[#EAA599]' : 'text-white'}`}>
                                 {track.title}
                               </span>
                               <span className="text-xs text-neutral-400 truncate block mt-0.5">
@@ -721,9 +835,18 @@ export const MinimalistPlayer: React.FC<MinimalistPlayerProps> = ({
                           </div>
 
                           <div className="flex items-center gap-2 flex-shrink-0 pl-2">
-                            <span className="text-xs text-neutral-400 tabular-nums font-mono">
-                              {formatTime(track.durationSec || 180)}
-                            </span>
+                            {isThisPlaying ? (
+                              <div className="flex items-end gap-0.5 h-3 px-1">
+                                <span className="w-0.5 h-3 bg-[#EAA599] rounded-full animate-pulse" />
+                                <span className="w-0.5 h-2 bg-white rounded-full animate-bounce delay-75" />
+                                <span className="w-0.5 h-3 bg-[#EAA599] rounded-full animate-pulse delay-150" />
+                              </div>
+                            ) : (
+                              <span className="text-xs text-neutral-400 tabular-nums font-mono">
+                                {formatTime(track.durationSec || 180)}
+                              </span>
+                            )}
+
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
@@ -809,11 +932,15 @@ export const MinimalistPlayer: React.FC<MinimalistPlayerProps> = ({
         <footer className="hidden md:flex h-20 sm:h-22 px-4 sm:px-6 border-t border-white/5 bg-[#090a0d]/95 items-center justify-between gap-3 select-none flex-shrink-0">
           
           {/* LEFT: Current Track Details, Like & Options */}
-          <div className="w-[28%] min-w-[140px] flex items-center gap-3">
+          <div className="w-[30%] min-w-[160px] flex items-center gap-3">
             <div className="min-w-0">
               <div className="flex items-center gap-2">
-                {/* Title: Bold White */}
-                <span className="text-sm font-bold text-white truncate max-w-[180px] sm:max-w-[220px]">
+                {/* Title: Bold White - Clickable to open lyrics & credits */}
+                <span 
+                  onClick={() => setIsNowPlayingModalOpen(true)}
+                  className="text-sm font-bold text-white truncate max-w-[180px] sm:max-w-[210px] cursor-pointer hover:text-[#EAA599] transition"
+                  title="Click to view Lyrics & Credits"
+                >
                   {cleanCurrentTrack?.title || 'No track selected'}
                 </span>
 
@@ -829,6 +956,16 @@ export const MinimalistPlayer: React.FC<MinimalistPlayerProps> = ({
                     <Heart size={15} className={isLiked ? 'fill-red-500 text-red-500' : ''} />
                   </button>
                 )}
+
+                {/* Lyrics & Credits Pill */}
+                <button
+                  onClick={() => setIsNowPlayingModalOpen(true)}
+                  className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/5 hover:bg-white/10 text-neutral-300 hover:text-white border border-white/5 text-[11px] font-medium transition active:scale-95"
+                  title="Lyrics, Credits & Visualizer"
+                >
+                  <Mic2 size={12} className="text-[#EAA599]" />
+                  <span className="hidden xl:inline">Lyrics</span>
+                </button>
 
                 {/* More Options */}
                 <button
@@ -962,7 +1099,7 @@ export const MinimalistPlayer: React.FC<MinimalistPlayerProps> = ({
             <button
               onClick={onToggleAlbumsSlideBar}
               className="text-neutral-400 hover:text-white p-1 rounded-lg hover:bg-white/5 transition"
-              title="Toggle Albums Menu"
+              title="Toggle Library Explorer"
             >
               <ChevronDown size={17} />
             </button>
@@ -970,6 +1107,12 @@ export const MinimalistPlayer: React.FC<MinimalistPlayerProps> = ({
         </footer>
 
       </div>
+
+      {/* 3. Now Playing Detail Modal (Lyrics, Credits & Visualizer) */}
+      <NowPlayingDetailModal
+        isOpen={isNowPlayingModalOpen}
+        onClose={() => setIsNowPlayingModalOpen(false)}
+      />
     </div>
   );
 };

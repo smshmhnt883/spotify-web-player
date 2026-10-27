@@ -39,3 +39,57 @@ body {
 .tabular-nums {
   font-variant-numeric: tabular-nums;
 }
+
+/* Alive Artwork & Orbital Animations */
+@keyframes artworkFloat {
+  0%, 100% {
+    transform: translateY(0px) scale(1);
+  }
+  50% {
+    transform: translateY(-5px) scale(1.012);
+  }
+}
+
+@keyframes orbitalSpin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes orbitalCounter {
+  from {
+    transform: rotate(360deg);
+  }
+  to {
+    transform: rotate(0deg);
+  }
+}
+
+@keyframes subtleShimmer {
+  0%, 100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+.animate-artwork-float {
+  animation: artworkFloat 7s ease-in-out infinite;
+}
+
+.animate-orbital-spin {
+  animation: orbitalSpin 45s linear infinite;
+}
+
+.animate-orbital-counter {
+  animation: orbitalCounter 30s linear infinite;
+}
+
+.animate-subtle-shimmer {
+  animation: subtleShimmer 4s ease-in-out infinite;
+}
+
