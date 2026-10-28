@@ -5,6 +5,7 @@ import { sanitizeTrack } from '../../utils/trackSanitizer';
 import { formatTime } from '../../utils/formatTime';
 import type { Playlist, Track } from '../../types';
 import './library.css';
+import { PersonalLibrary } from './PersonalLibrary';
 
 interface AlbumsSlideBarProps {
   isOpen: boolean;
@@ -12,8 +13,10 @@ interface AlbumsSlideBarProps {
   onOpenCloudVaultModal: () => void;
 }
 
-type LibraryCategory = 'albums' | 'artists' | 'tracks' | 'favorites';
+type LibraryCategory = 'albums' | 'artists' | 'tracks' | 'favorites' | 'playlists' | 'recent';
 const categories: { id: LibraryCategory; label: string }[] = [
+  { id: 'playlists', label: 'Playlists' },
+  { id: 'recent', label: 'Recent' },
   { id: 'albums', label: 'Albums' },
   { id: 'artists', label: 'Artists' },
   { id: 'tracks', label: 'Songs' },
@@ -23,6 +26,8 @@ const categories: { id: LibraryCategory; label: string }[] = [
 const artworkFor = (url?: string) => !url || url.includes('unsplash.com') ? './artwork.png' : url;
 
 export const AlbumsSlideBar: React.FC<AlbumsSlideBarProps> = ({ isOpen, onClose, onOpenCloudVaultModal }) => {
+  const personalPlaylists = usePlayerStore(s => s.personalPlaylists);
+  const recentlyPlayed = usePlayerStore(s => s.recentlyPlayed);
   const playlists = usePlayerStore(state => state.playlists);
   const activePlaylistId = usePlayerStore(state => state.activePlaylistId);
   const currentTrack = usePlayerStore(state => state.currentTrack);
@@ -44,7 +49,7 @@ export const AlbumsSlideBar: React.FC<AlbumsSlideBarProps> = ({ isOpen, onClose,
     document.body.style.overflow = 'hidden';
     const panel = panelRef.current;
     const focusable = () => Array.from(panel?.querySelectorAll<HTMLElement>(
-      'button:not([disabled]), input:not([disabled]), [tabindex="0"]'
+      'button:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex="0"]'
     ) || []);
     focusable()[0]?.focus();
 
@@ -79,8 +84,8 @@ export const AlbumsSlideBar: React.FC<AlbumsSlideBarProps> = ({ isOpen, onClose,
   }, [isOpen]);
 
   const allTracks = useMemo(() => Array.from(new Map(
-    playlists.flatMap(playlist => playlist.tracks).map(track => [track.id, sanitizeTrack(track)])
-  ).values()), [playlists]);
+    [...playlists, ...personalPlaylists].flatMap(playlist => playlist.tracks).map(track => [track.id, sanitizeTrack(track)])
+  ).values()), [playlists, personalPlaylists]);
   const artistList = useMemo(() => {
     const artists = new Map<string, Track[]>();
     allTracks.forEach(track => {
@@ -97,7 +102,7 @@ export const AlbumsSlideBar: React.FC<AlbumsSlideBarProps> = ({ isOpen, onClose,
   const matches = (text: string) => text.toLocaleLowerCase().includes(needle);
   const filteredAlbums = playlists.filter(album => matches(`${album.title} ${album.creator}`));
   const filteredArtists = artistList.filter(({ artist }) => matches(artist));
-  const trackContext = activeCategory === 'favorites' ? favoriteTracks : allTracks;
+  const trackContext = activeCategory === 'recent' ? recentlyPlayed : activeCategory === 'favorites' ? favoriteTracks : allTracks;
   const filteredTracks = trackContext.filter(track => matches(`${track.title} ${track.artist} ${track.album}`));
 
   const selectAlbum = (album: Playlist) => {
@@ -142,6 +147,7 @@ export const AlbumsSlideBar: React.FC<AlbumsSlideBarProps> = ({ isOpen, onClose,
         </nav>
 
         <div className="vx-library-content">
+          {activeCategory === 'playlists' && <PersonalLibrary allTracks={allTracks} onPlay={selectAlbum} query={query} />}
           {activeCategory === 'albums' && (
             <>
               {!needle && primaryAlbum && (
@@ -186,9 +192,9 @@ export const AlbumsSlideBar: React.FC<AlbumsSlideBarProps> = ({ isOpen, onClose,
             </>
           )}
 
-          {(activeCategory === 'tracks' || activeCategory === 'favorites') && (
+          {(activeCategory === 'tracks' || activeCategory === 'favorites' || activeCategory === 'recent') && (
             <>
-              <div className="vx-library-section-title"><span>{activeCategory === 'favorites' ? 'Worth another listen' : 'Every song, all in one place'}</span><span>{filteredTracks.length}</span></div>
+              <div className="vx-library-section-title"><span>{activeCategory === 'recent' ? 'Recently played' : activeCategory === 'favorites' ? 'Worth another listen' : 'Every song, all in one place'}</span><span>{filteredTracks.length}</span></div>
               <div className="vx-library-rows">
                 {filteredTracks.map(track => (
                   <button key={track.id} className={`vx-library-row ${currentTrack?.id === track.id ? 'is-current' : ''}`} onClick={() => selectTrack(track, trackContext)}>
@@ -198,7 +204,7 @@ export const AlbumsSlideBar: React.FC<AlbumsSlideBarProps> = ({ isOpen, onClose,
                   </button>
                 ))}
               </div>
-              {filteredTracks.length === 0 && <LibraryEmpty icon={activeCategory === 'favorites' ? <Heart size={25} /> : <Music2 size={25} />} title={needle ? 'Nothing here just yet' : activeCategory === 'favorites' ? 'Keep your favorites close' : 'Your next favorite is out there'} description={needle ? 'Try another song or artist.' : activeCategory === 'favorites' ? 'Tap the heart on a song to find it here.' : 'Connect your cloud vault to bring in your collection.'} />}
+              {filteredTracks.length === 0 && <LibraryEmpty icon={activeCategory === 'favorites' ? <Heart size={25} /> : <Music2 size={25} />} title={activeCategory === 'recent' && !needle ? 'Your listening story starts here' : needle ? 'Nothing here just yet' : activeCategory === 'favorites' ? 'Keep your favorites close' : 'Your next favorite is out there'} description={activeCategory === 'recent' && !needle ? 'Play a song and find it here next time.' : needle ? 'Try another song or artist.' : activeCategory === 'favorites' ? 'Tap the heart on a song to find it here.' : 'Connect your cloud vault to bring in your collection.'} />}
             </>
           )}
         </div>

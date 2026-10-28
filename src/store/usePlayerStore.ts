@@ -1,9 +1,23 @@
 import { create } from 'zustand';
+import { readSession, writeSession } from './playerSession';
 import type { Track, Playlist, RepeatMode, DrawerMode, ViewMode } from '../types';
 import { TRACKS, PLAYLISTS } from '../data/mockData';
 import { sanitizeTrack, cleanString } from '../utils/trackSanitizer';
 
 interface PlayerStore {
+  personalPlaylists: Playlist[];
+  recentlyPlayed: Track[];
+  playbackStatus: 'loading' | 'buffering' | 'playing' | 'paused' | 'error';
+  playbackError: string;
+  retryToken: number;
+  retryPlayback: () => void;
+  recordPlayed: (track: Track) => void;
+  createPlaylist: (title: string) => string;
+  renamePlaylist: (id: string, title: string) => void;
+  deletePlaylist: (id: string) => void;
+  addToPlaylist: (id: string, track: Track) => void;
+  removeFromPlaylist: (id: string, trackId: string) => void;
+  movePlaylistTrack: (id: string, index: number, direction: -1 | 1) => void;
   // Navigation
   currentView: ViewMode;
   activePlaylistId: string | null;
@@ -70,7 +84,7 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
   searchQuery: '',
   categoryFilter: 'all',
   cloudVaultUrl: 'https://pub-4c18be52287241ab9bedbddc0e397a4c.r2.dev',
-  workerApiUrl: typeof window !== 'undefined' ? (localStorage.getItem('vaultx_worker_api_url') || '') : '',
+  workerApiUrl: (() => { try { return localStorage.getItem('vaultx_worker_api_url') || ''; } catch { return ''; } })(),
   isCloudSynced: false,
   cloudSyncStatus: 'idle',
   cloudSyncMessage: '',
@@ -108,6 +122,26 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
   likedTrackIds: [TRACKS[0].id, TRACKS[2].id],
   playlists: PLAYLISTS,
 
+  personalPlaylists: [], recentlyPlayed: [], playbackStatus: 'paused', playbackError: '', retryToken: 0,
+  retryPlayback: () => set(s => ({ retryToken: s.retryToken + 1, isPlaying: true, playbackError: '', playbackStatus: 'loading' })),
+  recordPlayed: (track) => set(s => ({ recentlyPlayed: [track, ...s.recentlyPlayed.filter(t => t.id !== track.id)].slice(0, 30) })),
+  createPlaylist: (title) => {
+    const id = `personal-${crypto.randomUUID()}`;
+    if (!title.trim()) return '';
+    set(s => ({ personalPlaylists: [...s.personalPlaylists, { id, title: title.trim().slice(0, 100), description: '', creator: 'You', coverUrl: '/artwork.png', dominantColor: '#e8b49b', tracks: [] }] }));
+    return id;
+  },
+  renamePlaylist: (id, title) => { if (title.trim()) set(s => ({ personalPlaylists: s.personalPlaylists.map(p => p.id === id ? { ...p, title: title.trim().slice(0, 100) } : p) })); },
+  deletePlaylist: (id) => set(s => ({ personalPlaylists: s.personalPlaylists.filter(p => p.id !== id) })),
+  addToPlaylist: (id, track) => set(s => ({ personalPlaylists: s.personalPlaylists.map(p => p.id === id && !p.tracks.some(t => t.id === track.id) ? { ...p, tracks: [...p.tracks, track] } : p) })),
+  removeFromPlaylist: (id, trackId) => set(s => ({ personalPlaylists: s.personalPlaylists.map(p => p.id === id ? { ...p, tracks: p.tracks.filter(t => t.id !== trackId) } : p) })),
+  movePlaylistTrack: (id, index, direction) => set(s => ({ personalPlaylists: s.personalPlaylists.map(p => {
+    const target = index + direction;
+    if (p.id !== id || index < 0 || index >= p.tracks.length || target < 0 || target >= p.tracks.length) return p;
+    const tracks = [...p.tracks];
+    [tracks[index], tracks[target]] = [tracks[target], tracks[index]];
+    return { ...p, tracks };
+  }) })),
   // Actions
   playTrack: (track, contextTracks) => {
     const list = contextTracks ?? get().contextTracks;
@@ -115,6 +149,7 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
     set({
       currentTrack: track,
       isPlaying: true,
+      playbackError: '',
       currentTime: 0,
       duration: track.durationSec,
       contextTracks: list,
@@ -257,7 +292,7 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
   setWorkerApiUrl: (url: string) => {
     const clean = url.trim();
     if (typeof window !== 'undefined') {
-      localStorage.setItem('vaultx_worker_api_url', clean);
+      try { localStorage.setItem('vaultx_worker_api_url', clean); } catch { /* Storage may be disabled. */ }
     }
     set({ workerApiUrl: clean });
   },
@@ -305,11 +340,11 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
               workerApiUrl: cleanWorkerUrl
             });
             if (typeof window !== 'undefined') {
-              localStorage.setItem('vaultx_worker_api_url', cleanWorkerUrl);
+              try { localStorage.setItem('vaultx_worker_api_url', cleanWorkerUrl); } catch { /* Storage may be disabled. */ }
             }
 
             const firstCloudTrack = cleanPlaylists[0]?.tracks[0];
-            if (firstCloudTrack && !get().isPlaying) {
+            if (firstCloudTrack && !get().isPlaying && !hasSessionSelection) {
               set({
                 currentTrack: firstCloudTrack,
                 duration: firstCloudTrack.durationSec,
@@ -343,7 +378,7 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
           });
 
           const firstCloudTrack = cleanPlaylists[0]?.tracks[0];
-          if (firstCloudTrack && !get().isPlaying) {
+          if (firstCloudTrack && !get().isPlaying && !hasSessionSelection) {
             set({
               currentTrack: firstCloudTrack,
               duration: firstCloudTrack.durationSec,
@@ -365,3 +400,32 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
     return false;
   }
 }));
+
+// Hydrate before the app and its cloud sync mount; playback is always restored paused.
+const restored = readSession();
+let hasSessionSelection = !!restored.currentTrack;
+usePlayerStore.setState({ ...restored, isPlaying: false, ...(restored.currentTrack ? { duration: restored.currentTrack.durationSec } : {}) });
+let lastPositionSave = 0;
+function saveSession() {
+  const s = usePlayerStore.getState();
+  const { currentTrack, currentTime, contextTracks, contextIndex, userQueue, likedTrackIds, personalPlaylists, recentlyPlayed, volume, previousVolume, isMuted, isShuffle, repeatMode } = s;
+  writeSession({ currentTrack, currentTime, contextTracks, contextIndex, userQueue, likedTrackIds, personalPlaylists, recentlyPlayed, volume, previousVolume, isMuted, isShuffle, repeatMode });
+  lastPositionSave = Date.now();
+}
+usePlayerStore.subscribe((s, previous) => {
+  if (s.isPlaying || s.currentTime > 0) hasSessionSelection = true;
+  if (s.playlists !== previous.playlists) {
+    const fresh = new Map(s.playlists.flatMap(p => p.tracks).map(t => [t.id, t]));
+    const reconcile = (t: Track) => fresh.get(t.id) || t;
+    usePlayerStore.setState({ currentTrack: s.currentTrack ? reconcile(s.currentTrack) : null,
+      contextTracks: s.contextTracks.map(reconcile), userQueue: s.userQueue.map(reconcile),
+      recentlyPlayed: s.recentlyPlayed.map(reconcile), personalPlaylists: s.personalPlaylists.map(p => ({ ...p, tracks: p.tracks.map(reconcile) })) });
+    return;
+  }
+  const immediate = ['currentTrack', 'contextTracks', 'userQueue', 'likedTrackIds', 'personalPlaylists', 'recentlyPlayed', 'volume', 'previousVolume', 'isMuted', 'isShuffle', 'repeatMode'] as const;
+  if (immediate.some(key => s[key] !== previous[key]) || (previous.isPlaying && !s.isPlaying) || (s.currentTime !== previous.currentTime && Date.now() - lastPositionSave >= 5000)) saveSession();
+});
+if (typeof document !== 'undefined') {
+  document.addEventListener('visibilitychange', () => { if (document.hidden) saveSession(); });
+  window.addEventListener('pagehide', saveSession);
+}

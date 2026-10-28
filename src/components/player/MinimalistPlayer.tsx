@@ -7,6 +7,7 @@ import { sanitizeTrack } from '../../utils/trackSanitizer';
 import { NowPlayingDetailModal } from '../modals/NowPlayingDetailModal';
 import type { Track } from '../../types';
 import './player.css';
+import { PlaylistPicker } from './PlaylistPicker';
 
 interface MinimalistPlayerProps {
   onToggleAlbumsSlideBar: () => void;
@@ -55,6 +56,11 @@ export function MinimalistPlayer({ onToggleAlbumsSlideBar, onOpenCloudVaultModal
     addToQueue: s.addToQueue, removeFromQueue: s.removeFromQueue,
   })));
   const { currentTrack, isPlaying, contextTracks, contextIndex, playlists, userQueue, likedTrackIds } = state;
+  const [playlistTrack, setPlaylistTrack] = useState<Track | null>(null);
+  const personalPlaylists = usePlayerStore(s => s.personalPlaylists);
+  const playbackStatus = usePlayerStore(s => s.playbackStatus);
+  const playbackError = usePlayerStore(s => s.playbackError);
+  const retryPlayback = usePlayerStore(s => s.retryPlayback);
   const [filter, setFilter] = useState<'album' | 'favorites' | 'queue'>('album');
   const [query, setQuery] = useState('');
   const [detailOpen, setDetailOpen] = useState(false);
@@ -62,7 +68,7 @@ export function MinimalistPlayer({ onToggleAlbumsSlideBar, onOpenCloudVaultModal
   const [notice, setNotice] = useState('');
   const searchRef = useRef<HTMLInputElement>(null);
   const trackListRef = useRef<HTMLElement>(null);
-  const allTracks = useMemo(() => Array.from(new Map(playlists.flatMap(p => p.tracks).map(t => [t.id, sanitizeTrack(t)])).values()), [playlists]);
+  const allTracks = useMemo(() => Array.from(new Map([...playlists, ...personalPlaylists].flatMap(p => p.tracks).map(t => [t.id, sanitizeTrack(t)])).values()), [playlists, personalPlaylists]);
   const track = useMemo(() => currentTrack ? sanitizeTrack(currentTrack) : null, [currentTrack]);
   const liked = !!track && likedTrackIds.includes(track.id);
   const searching = query.trim().length > 0;
@@ -162,6 +168,7 @@ export function MinimalistPlayer({ onToggleAlbumsSlideBar, onOpenCloudVaultModal
                   <span className="vx-row-cover"><img src={coverFor(item)} alt="" loading="lazy" onError={imageFallback} /><span>{selected && isPlaying ? <Pause size={15} fill="currentColor" /> : <Play size={15} fill="currentColor" />}</span></span>
                   <span className="vx-row-copy"><strong title={item.title}>{item.title}</strong><span>{item.artist}</span></span><span className="vx-track-duration">{formatTime(item.durationSec)}</span>
                 </button>
+                <button className="vx-row-action" aria-label={`Add ${item.title} to playlist`} onClick={() => setPlaylistTrack(item)}><ListMusic size={16} /></button>
                 <button className={`vx-row-action ${isFavorite ? 'is-active' : ''}`} aria-label={`${isFavorite ? 'Unfavorite' : 'Favorite'} ${item.title}`} aria-pressed={isFavorite} onClick={() => state.toggleLike(item.id)}><Heart size={16} fill={isFavorite ? 'currentColor' : 'none'} /></button>
                 <button className="vx-row-action" aria-label={`${filter === 'queue' && !searching ? 'Remove' : queued ? 'Already queued:' : 'Queue'} ${item.title}`} disabled={queued && (filter !== 'queue' || searching)} onClick={() => {
                   if (filter === 'queue' && !searching) state.removeFromQueue(item.id);
@@ -184,7 +191,7 @@ export function MinimalistPlayer({ onToggleAlbumsSlideBar, onOpenCloudVaultModal
         <button className="vx-play-button" onClick={state.togglePlay} aria-label={isPlaying ? 'Pause' : 'Play'} disabled={!track}>{isPlaying ? <Pause size={22} fill="currentColor" /> : <Play size={22} fill="currentColor" />}</button>
         <button className="vx-icon-button" onClick={state.nextTrack} aria-label="Next track" title="Next track"><SkipForward size={21} fill="currentColor" /></button>
         <button className={`vx-icon-button ${state.repeatMode !== 'off' ? 'is-active' : ''}`} onClick={state.toggleRepeat} aria-label={`Repeat: ${state.repeatMode}`} aria-pressed={state.repeatMode !== 'off'} title={`Repeat: ${state.repeatMode}`}>{state.repeatMode === 'one' ? <Repeat1 size={18} /> : <Repeat size={18} />}</button>
-      </div><Timeline /></div>
+      </div><Timeline /><div className="vx-playback-status" role="status" aria-live="polite">{playbackStatus === 'loading' ? 'Loading song...' : playbackStatus === 'buffering' ? 'Buffering...' : playbackError}{playbackStatus === 'error' && <button onClick={retryPlayback}>Retry</button>}</div></div>
       <div className="vx-player-tools">
         <button className="vx-icon-button" onClick={state.toggleMute} aria-label={state.isMuted ? 'Unmute' : 'Mute'}>{state.isMuted || state.volume === 0 ? <VolumeX size={19} /> : <Volume2 size={19} />}</button>
         <input className="vx-volume" type="range" aria-label="Volume" min="0" max="1" step="0.01" value={state.isMuted ? 0 : state.volume} onChange={e => state.setVolume(Number(e.target.value))} style={{ '--progress': `${state.volume * 100}%` } as CSSProperties} />
@@ -193,6 +200,7 @@ export function MinimalistPlayer({ onToggleAlbumsSlideBar, onOpenCloudVaultModal
       </div>
     </footer>
     <div className={`vx-toast ${notice ? 'is-visible' : ''}`} role="status">{notice && <><Check size={17} aria-hidden="true" />{notice}</>}</div>
+    <PlaylistPicker track={playlistTrack} onClose={() => setPlaylistTrack(null)} />
     <NowPlayingDetailModal isOpen={detailOpen} onClose={() => setDetailOpen(false)} />
   </div>;
 }

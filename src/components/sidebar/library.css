@@ -77,3 +77,15 @@
 @keyframes vx-library-fade { from { opacity: 0; } to { opacity: 1; } }
 @media (max-width: 420px) { .vx-library-header { padding: max(25px, env(safe-area-inset-top)) 21px 22px; } .vx-library-search { margin: 0 21px 20px; } .vx-library-tabs { padding: 0 18px; } .vx-library-content { padding: 23px 21px; } .vx-library-footer { padding-left: 21px; padding-right: 21px; } }
 @media (prefers-reduced-motion: reduce) { .vx-library, .vx-library-backdrop { animation: none; } .vx-library *, .vx-library *::before, .vx-library *::after { transition: none !important; } }
+
+.vx-library-tabs { grid-template-columns: repeat(3, 1fr); }
+.vx-personal-editor label { display: block; font-size: 13px; margin-top: 16px; }
+.vx-personal-editor input, .vx-personal-editor select { width: 100%; min-height: 44px; background: #292d27; border: 1px solid #555; border-radius: 6px; color: #f3eee7; font-size: 16px; padding: 8px; margin: 8px 0; }
+.vx-personal-editor button { min-height: 44px; padding: 8px; border: 1px solid #454940; border-radius: 6px; color: #e8b49b; }
+.vx-personal-editor p { font-size: 13px; color: #a7aaa5; line-height: 1.6; }
+.vx-personal-editor h3 { margin: 20px 0; overflow-wrap: anywhere; }
+.vx-personal-actions { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0; }
+.vx-personal-track { padding: 12px 0; border-bottom: 1px solid #ffffff18; }
+.vx-personal-track > span { display: block; overflow-wrap: anywhere; margin-bottom: 8px; }
+.vx-personal-track > div { display: flex; gap: 8px; }
+.vx-personal-track button { min-width: 44px; }

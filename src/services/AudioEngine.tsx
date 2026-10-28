@@ -21,98 +21,110 @@ export const AudioEngine: React.FC = () => {
     toggleDrawer
   } = usePlayerStore();
 
-  // Initialize Audio & Media Session
+  const retryToken = usePlayerStore(s => s.retryToken);
+  const resumeRef = useRef(currentTime);
+
+  // Each source owns its audio element so late events cannot affect a newer track.
   useEffect(() => {
+    if (!currentTrack) return;
     const audio = new Audio();
     audioRef.current = audio;
-
-    const handleLoadedMetadata = () => {
-      if (audio.duration && !isNaN(audio.duration)) {
-        setDuration(Math.floor(audio.duration));
+    let active = true;
+    let recorded = false;
+    const store = usePlayerStore.getState;
+    const status = (playbackStatus: 'loading' | 'buffering' | 'playing' | 'paused' | 'error', playbackError = '') => {
+      if (active) usePlayerStore.setState({ playbackStatus, playbackError });
+    };
+    resumeRef.current = store().currentTime;
+    audio.volume = store().isMuted ? 0 : store().volume;
+    audio.preload = 'metadata';
+    audio.src = currentTrack.audioUrl;
+    status(store().isPlaying ? 'loading' : 'paused');
+    const fail = () => {
+      if (!active) return;
+      status('error', audio.error?.code === 2 ? 'Connection interrupted. Check your connection and retry.' : 'This song could not be played. Retry or choose another track.');
+      store().setIsPlaying(false);
+    };
+    const loaded = () => {
+      if (!active) return;
+      if (Number.isFinite(audio.duration) && audio.duration > 0) {
+        setDuration(audio.duration);
+        audio.currentTime = Math.min(Math.max(0, resumeRef.current), Math.max(0, audio.duration - .1));
+        setCurrentTime(audio.currentTime);
       }
     };
-
-    const handleEnded = () => {
+    const playing = () => {
+      if (!active) return;
+      status('playing');
+      if (!recorded) { store().recordPlayed(currentTrack); recorded = true; }
+    };
+    const waiting = () => { if (store().isPlaying) status('buffering'); };
+    const pause = () => { if (active && !audio.ended && !audio.error) { setCurrentTime(audio.currentTime); store().setIsPlaying(false); status('paused'); } };
+    const ended = () => {
+      if (!active) return;
+      setCurrentTime(0);
       nextTrack();
-    };
-
-    const handlePlay = () => setIsPlaying(true);
-    const handlePause = () => setIsPlaying(false);
-
-    audio.addEventListener('loadedmetadata', handleLoadedMetadata);
-    audio.addEventListener('ended', handleEnded);
-    audio.addEventListener('play', handlePlay);
-    audio.addEventListener('pause', handlePause);
-
-    return () => {
-      audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
-      audio.removeEventListener('ended', handleEnded);
-      audio.removeEventListener('play', handlePlay);
-      audio.removeEventListener('pause', handlePause);
-      audio.pause();
-      if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
-    };
-  }, []);
-
-  // Update track source on change
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio || !currentTrack) return;
-
-    if (audio.src !== currentTrack.audioUrl) {
-      audio.src = currentTrack.audioUrl;
-      audio.load();
-      if (isPlaying) {
-        audio.play().catch(() => {
-          // Handled autoplay restrictions
-        });
+      if (store().currentTrack?.id === currentTrack.id && store().isPlaying) {
+        audio.currentTime = 0;
+        audio.play().catch(fail);
       }
-    }
-  }, [currentTrack]);
-
-  // Handle Play/Pause
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio || !currentTrack) return;
-
-    if (isPlaying && audio.paused) {
-      audio.play().catch(() => setIsPlaying(false));
-    } else if (!isPlaying && !audio.paused) {
+    };
+    audio.addEventListener('loadedmetadata', loaded);
+    audio.addEventListener('playing', playing);
+    audio.addEventListener('waiting', waiting);
+    audio.addEventListener('stalled', waiting);
+    audio.addEventListener('error', fail);
+    audio.addEventListener('pause', pause);
+    audio.addEventListener('ended', ended);
+    audio.load();
+    return () => {
+      active = false;
       audio.pause();
-    }
-  }, [isPlaying]);
+      audio.removeAttribute('src');
+      audio.load();
+      if (audioRef.current === audio) audioRef.current = null;
+    };
+  }, [currentTrack?.id, currentTrack?.audioUrl, retryToken]);
 
-  // Handle Volume & Mute
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
-    audio.volume = isMuted ? 0 : volume;
+    let cancelled = false;
+    if (isPlaying) {
+      usePlayerStore.setState({ playbackStatus: 'loading', playbackError: '' });
+      audio.play().catch((error: DOMException) => {
+        if (cancelled || audioRef.current !== audio || error.name === 'AbortError') return;
+        usePlayerStore.setState({ isPlaying: false, playbackStatus: 'error', playbackError: error.name === 'NotAllowedError'
+          ? 'Your browser needs a tap to start audio. Press Retry to play.'
+          : 'This song could not be played. Retry or choose another track.' });
+      });
+    } else {
+      audio.pause();
+      if (usePlayerStore.getState().playbackStatus !== 'error') usePlayerStore.setState({ playbackStatus: 'paused' });
+    }
+    return () => { cancelled = true; };
+  }, [isPlaying, currentTrack?.id, currentTrack?.audioUrl, retryToken]);
+
+  useEffect(() => {
+    if (audioRef.current) audioRef.current.volume = isMuted ? 0 : volume;
   }, [volume, isMuted]);
 
-  // Handle Seek from Store
   useEffect(() => {
     const audio = audioRef.current;
-    if (!audio) return;
-    // Only seek if difference is more than 1.5 seconds to prevent feedback loop
-    if (Math.abs(audio.currentTime - currentTime) > 1.5) {
-      audio.currentTime = currentTime;
+    resumeRef.current = currentTime;
+    if (audio && audio.readyState >= 1 && Number.isFinite(audio.duration) && Math.abs(audio.currentTime - currentTime) > 1.5) {
+      audio.currentTime = Math.min(Math.max(0, currentTime), audio.duration);
     }
   }, [currentTime]);
 
-  // 60fps RequestAnimationFrame Loop for smooth scrubber & lyrics sync
   useEffect(() => {
     const tick = () => {
       const audio = audioRef.current;
-      if (audio && !audio.paused) {
-        setCurrentTime(audio.currentTime);
-      }
+      if (audio && !audio.paused) setCurrentTime(audio.currentTime);
       animFrameRef.current = requestAnimationFrame(tick);
     };
-
     animFrameRef.current = requestAnimationFrame(tick);
-    return () => {
-      if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
-    };
+    return () => { if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current); };
   }, []);
 
   // Setup OS Native Media Session API
@@ -128,8 +140,8 @@ export const AudioEngine: React.FC = () => {
       ]
     });
 
-    navigator.mediaSession.setActionHandler('play', () => togglePlay());
-    navigator.mediaSession.setActionHandler('pause', () => togglePlay());
+    navigator.mediaSession.setActionHandler('play', () => setIsPlaying(true));
+    navigator.mediaSession.setActionHandler('pause', () => setIsPlaying(false));
     navigator.mediaSession.setActionHandler('previoustrack', () => previousTrack());
     navigator.mediaSession.setActionHandler('nexttrack', () => nextTrack());
     navigator.mediaSession.setActionHandler('seekto', (details) => {
