@@ -32,14 +32,44 @@ const Timeline = memo(function Timeline() {
   const currentTime = usePlayerStore(s => s.currentTime);
   const duration = usePlayerStore(s => s.duration);
   const seek = usePlayerStore(s => s.seek);
+  const trackId = usePlayerStore(s => s.currentTrack?.id);
+  const [preview, setPreview] = useState<number | null>(null);
+  const dragging = useRef(false);
+  useEffect(() => { dragging.current = false; setPreview(null); }, [trackId]);
   const safeDuration = Number.isFinite(duration) && duration > 0 ? duration : 0;
-  const value = Math.min(Math.max(currentTime, 0), safeDuration);
+  const value = Math.min(Math.max(preview ?? currentTime, 0), safeDuration);
+  const finishSeek = (input: HTMLInputElement) => {
+    if (!dragging.current) return;
+    dragging.current = false;
+    seek(Number(input.value));
+    setPreview(null);
+  };
   return <div className="vx-timeline">
     <span>{formatTime(value)}</span>
-    <input type="range" min="0" max={safeDuration || 1} step="2" value={value} disabled={!safeDuration}
+    <input type="range" min="0" max={safeDuration || 1} step="1" value={value} disabled={!safeDuration}
       aria-label="Playback position" aria-valuetext={`${formatTime(value)} of ${formatTime(safeDuration)}`}
+      title="Seek through song. Arrow keys move 5 seconds."
       style={{ '--progress': `${safeDuration ? value / safeDuration * 100 : 0}%` } as CSSProperties}
-      onChange={event => seek(Number(event.target.value))} />
+      onPointerDown={event => {
+        if (event.button !== 0) return;
+        dragging.current = true;
+        setPreview(value);
+        event.currentTarget.setPointerCapture(event.pointerId);
+      }}
+      onChange={event => {
+        const time = Number(event.target.value);
+        if (dragging.current) setPreview(time);
+        else seek(time);
+      }}
+      onPointerUp={event => finishSeek(event.currentTarget)}
+      onPointerCancel={() => { dragging.current = false; setPreview(null); }}
+      onLostPointerCapture={event => finishSeek(event.currentTarget)}
+      onBlur={event => finishSeek(event.currentTarget)}
+      onKeyDown={event => {
+        if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+        event.preventDefault();
+        seek(value + (event.key === 'ArrowRight' ? 5 : -5));
+      }} />
     <span>{formatTime(safeDuration)}</span>
   </div>;
 });

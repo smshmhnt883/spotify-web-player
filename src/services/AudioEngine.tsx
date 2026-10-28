@@ -76,9 +76,17 @@ export const AudioEngine: React.FC = () => {
     audio.addEventListener('error', fail);
     audio.addEventListener('pause', pause);
     audio.addEventListener('ended', ended);
+    const unsubscribeSeek = usePlayerStore.subscribe((state, previous) => {
+      if (!active || state.seekRevision === previous.seekRevision) return;
+      resumeRef.current = state.currentTime;
+      if (audio.readyState >= 1 && Number.isFinite(audio.duration)) {
+        audio.currentTime = Math.min(Math.max(0, state.currentTime), audio.duration);
+      }
+    });
     audio.load();
     return () => {
       active = false;
+      unsubscribeSeek();
       audio.pause();
       audio.removeAttribute('src');
       audio.load();
@@ -110,17 +118,9 @@ export const AudioEngine: React.FC = () => {
   }, [volume, isMuted]);
 
   useEffect(() => {
-    const audio = audioRef.current;
-    resumeRef.current = currentTime;
-    if (audio && audio.readyState >= 1 && Number.isFinite(audio.duration) && Math.abs(audio.currentTime - currentTime) > 1.5) {
-      audio.currentTime = Math.min(Math.max(0, currentTime), audio.duration);
-    }
-  }, [currentTime]);
-
-  useEffect(() => {
     const tick = () => {
       const audio = audioRef.current;
-      if (audio && !audio.paused) setCurrentTime(audio.currentTime);
+      if (audio && !audio.paused && !audio.seeking) setCurrentTime(audio.currentTime);
       animFrameRef.current = requestAnimationFrame(tick);
     };
     animFrameRef.current = requestAnimationFrame(tick);

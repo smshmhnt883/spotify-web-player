@@ -117,3 +117,18 @@
 .vx-playlist-choice span { color: #a7aaa5; font-size: 12px; flex-shrink: 0; }
 .vx-playlist-picker button:disabled { opacity: .5; }
 .vx-playlist-picker :focus-visible { outline: 2px solid #e8b49b; outline-offset: 3px; }
+
+/* A full-height native range keeps seeking usable with touch, mouse and keyboard. */
+.vx-timeline { gap: 10px; font-size: 11px; }
+.vx-timeline > span { min-width: 34px; }
+.vx-timeline input { height: 44px; margin: 0; touch-action: pan-y; }
+.vx-timeline input::-webkit-slider-runnable-track { height: 6px; border-radius: 6px; }
+.vx-timeline input::-webkit-slider-thumb { width: 18px; height: 18px; margin-top: -6px; border: 3px solid #f3eee7; box-shadow: 0 0 0 3px #e8b49b18; }
+.vx-timeline input::-moz-range-track, .vx-timeline input::-moz-range-progress { height: 6px; border-radius: 6px; }
+.vx-timeline input::-moz-range-thumb { width: 12px; height: 12px; border: 3px solid #f3eee7; box-shadow: 0 0 0 3px #e8b49b18; }
+.vx-timeline input:hover::-webkit-slider-thumb, .vx-timeline input:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 6px #e8b49b26; }
+.vx-timeline input:focus-visible { outline: 2px solid var(--vx-accent); outline-offset: 2px; border-radius: 6px; }
+.vx-timeline input:disabled { cursor: default; opacity: .45; }
+.vx-transport-buttons { margin-bottom: 0; }
+.vx-transport-buttons > .vx-icon-button { min-width: 44px; min-height: 44px; }
+@media (max-width: 640px) { .vx-timeline { font-size: 11px; }.vx-transport { gap: 0; }.vx-transport-buttons { gap: clamp(8px, 4vw, 23px); } }

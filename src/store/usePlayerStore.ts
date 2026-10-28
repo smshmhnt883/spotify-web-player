@@ -35,6 +35,7 @@ interface PlayerStore {
   currentTrack: Track | null;
   isPlaying: boolean;
   currentTime: number;
+  seekRevision: number;
   duration: number;
   volume: number;
   isMuted: boolean;
@@ -106,6 +107,7 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
   currentTrack: TRACKS[0],
   isPlaying: false,
   currentTime: 0,
+  seekRevision: 0,
   duration: TRACKS[0].durationSec,
   volume: 0.8,
   isMuted: false,
@@ -170,7 +172,10 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
 
   setIsPlaying: (isPlaying) => set({ isPlaying }),
 
-  seek: (time) => set({ currentTime: time }),
+  seek: (time) => {
+    if (!Number.isFinite(time)) return;
+    set(s => ({ currentTime: Math.min(Math.max(0, time), Number.isFinite(s.duration) ? Math.max(0, s.duration) : 0), seekRevision: s.seekRevision + 1 }));
+  },
   setCurrentTime: (time) => set({ currentTime: time }),
   setDuration: (duration) => set({ duration }),
 
@@ -194,7 +199,8 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
 
     // 2. Repeat single track
     if (repeatMode === 'one') {
-      set({ currentTime: 0, isPlaying: true });
+      get().seek(0);
+      set({ isPlaying: true });
       return;
     }
 
@@ -227,7 +233,7 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
     const { currentTime, contextTracks, contextIndex } = get();
     // If playing past 3 seconds, restart track
     if (currentTime > 3) {
-      set({ currentTime: 0 });
+      get().seek(0);
       return;
     }
 
@@ -243,7 +249,7 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
         duration: prevTrack.durationSec
       });
     } else {
-      set({ currentTime: 0 });
+      get().seek(0);
     }
   },
 
