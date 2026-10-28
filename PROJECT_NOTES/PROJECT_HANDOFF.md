@@ -39,3 +39,24 @@ This is the shared handoff log for work on this music player across Codex and Go
 - **Files:** `src/components/player/MinimalistPlayer.tsx`, `src/components/player/player.css`, `PROJECT_NOTES/PROJECT_HANDOFF.md`.
 - **Validation:** `npm run build` ran and completed with 0 errors (`tsc -b && vite build` verified). Responsive styles verified for desktop, tablet, and mobile breakpoints.
 - **Deployment:** Approved by user. Pushed to `main` branch on GitHub (`https://github.com/smshmhnt883/spotify-web-player`), triggering automatic production deployment on Vercel (`https://music-player-alpha-beige.vercel.app/`).
+
+### 2026-10-28 — Playback-aware room ambience
+
+- **Summary:** Added soft, drifting warm light behind the listening room. The animation runs during playback and pauses when music is paused; it is ambient motion, not analysis of the track's actual beats. Reduced-motion preferences disable the animation.
+- **Files:** `src/components/player/MinimalistPlayer.tsx`, `src/components/player/player.css`, `PROJECT_NOTES/PROJECT_HANDOFF.md`.
+- **Validation:** `npm run build` passed; opened the local player and confirmed playback activates the effect. `git diff --check` passed.
+- **Deployment:** Local preview only; not pushed or deployed.
+
+### 2026-10-28 — Refine room ambience
+
+- **Summary:** Broadened the warm edge lighting, added faint concentric rings inspired by record grooves, and added a soft overhead glow. Adjusted glow placement for phone screens. Existing playback pause/resume and reduced-motion behavior are retained; animation remains ambient rather than beat analysis.
+- **Files:** `src/components/player/player.css`, `PROJECT_NOTES/PROJECT_HANDOFF.md`.
+- **Validation:** Production build and diff check passed. Local browser inspection confirmed both animated layers run on Play and pause on Pause, with no horizontal overflow at the inspected viewport (778px). Phone placement was implemented but not separately previewed this pass.
+- **Deployment:** Local preview only; not pushed or deployed.
+
+### 2026-10-28 — Mobile ambience optimization and release
+
+- **Summary:** Adapted the warm glow and record-like rings for mobile: viewport-relative layers capped at 480px, smaller ring spacing, and slower secondary motion. Preserved playback-aware animation, decorative accessibility treatment, non-intercepting background, and reduced-motion CSS. Includes the two previously local ambience changes above.
+- **Files:** `src/components/player/MinimalistPlayer.tsx`, `src/components/player/player.css`, `PROJECT_NOTES/PROJECT_HANDOFF.md`.
+- **Validation:** Production build passed. Browser viewport checks at 320x740, 375x812, 390x844, 430x932, and 844x390 showed no horizontal overflow; inspected the phone layout and confirmed running animation during playback. These are desktop browser viewport checks, not physical iOS/Android device tests.
+- **Deployment:** User authorized GitHub push and production deployment. Releasing via the existing `main` GitHub-to-Vercel integration for `shm-ventures/music-player`; production verification will be recorded below. The Vercel plugin currently lacks team access.

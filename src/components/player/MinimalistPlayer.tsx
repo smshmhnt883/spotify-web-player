@@ -108,7 +108,8 @@ export function MinimalistPlayer({ onToggleAlbumsSlideBar, onOpenCloudVaultModal
   };
   const showQueue = () => { setQuery(''); setFilter('queue'); trackListRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }); };
 
-  return <div className="vx-app">
+  return <div className={`vx-app ${isPlaying ? 'is-playing' : ''}`}>
+    <div className="vx-room-ambience" aria-hidden="true"><span /><span /></div>
     <a className="vx-skip-link" href="#listening-room">Skip to player</a>
     <header className="vx-header">
       <a className="vx-brand" href="#listening-room" aria-label="VaultX home"><span className="vx-brand-mark" aria-hidden="true"><i /><i /><i /></span>vault<span>x</span><small>MUSIC</small></a>

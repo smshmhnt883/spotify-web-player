@@ -1,4 +1,17 @@
-.vx-app { --vx-bg: #141515; --vx-surface: #1b1c1c; --vx-text: #f3eee7; --vx-muted: #a7aaa5; --vx-accent: #e8b49b; --vx-line: #ffffff12; min-height: 100dvh; color: var(--vx-text); background: var(--vx-bg); display: flex; flex-direction: column; }
+.vx-app { --vx-bg: #141515; --vx-surface: #1b1c1c; --vx-text: #f3eee7; --vx-muted: #a7aaa5; --vx-accent: #e8b49b; --vx-line: #ffffff12; min-height: 100dvh; color: var(--vx-text); background: var(--vx-bg); display: flex; flex-direction: column; isolation: isolate; }
+.vx-room-ambience { position: fixed; inset: 0; overflow: hidden; pointer-events: none; z-index: -1; background: radial-gradient(ellipse at 50% 0, #e8b49b08, transparent 65%); }
+.vx-room-ambience span { position: absolute; width: clamp(520px, 78vw, 1100px); aspect-ratio: 1; border-radius: 50%; opacity: .35; background: radial-gradient(circle, #c9856a40 0%, #a66e6028 25%, transparent 68%); transition: opacity 1.2s ease; animation: vx-ambience-drift 12s ease-in-out infinite alternate; animation-play-state: paused; }
+.vx-room-ambience span:first-child { left: -28%; top: -10%; }
+.vx-room-ambience span:last-child { right: -28%; bottom: -40%; background: radial-gradient(circle, #b79b7140 0%, #92735e24 28%, transparent 68%); animation-duration: 9s; animation-direction: alternate-reverse; }
+.vx-room-ambience span::after { content: ''; position: absolute; inset: 10%; border-radius: 50%; border: 1px solid #e8b49b0a; box-shadow: 0 0 0 42px #e8b49b05, 0 0 0 84px #e8b49b04, 0 0 0 126px #e8b49b03; }
+.vx-app.is-playing .vx-room-ambience span { opacity: 1; animation-play-state: running; }
+@media (max-width: 640px) {
+  .vx-room-ambience span { width: min(115vw, 480px); }
+  .vx-room-ambience span:first-child { left: -65%; top: -5%; }
+  .vx-room-ambience span:last-child { right: -60%; bottom: -5%; animation-duration: 14s; }
+  .vx-room-ambience span::after { box-shadow: 0 0 0 26px #e8b49b05, 0 0 0 52px #e8b49b04, 0 0 0 78px #e8b49b03; }
+}
+@keyframes vx-ambience-drift { 0% { transform: translate3d(0, 0, 0) scale(.9); } 50% { transform: translate3d(5%, -4%, 0) scale(1.12); } 100% { transform: translate3d(-3%, 6%, 0) scale(.98); } }
 .vx-app button, .vx-app a, .vx-app input { -webkit-tap-highlight-color: transparent; }
 .vx-app button { transition: color .18s, background .18s, border-color .18s, transform .18s; }
 .vx-app button:disabled { cursor: default; opacity: .45; }
