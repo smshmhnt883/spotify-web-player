@@ -77,3 +77,10 @@ This is the shared handoff log for work on this music player across Codex and Go
 - **Files:** Player component/styles, player store, audio engine, and the existing audio regression script.
 - **Validation:** Production build and both focused scripts passed, including new precise/repeated/pending seek and progress-isolation assertions. Local browser checks confirmed keyboard forward/back steps, mouse drag during playback (about 1:29 to 2:41), click-to-seek, pause/play, 320/375px widths without horizontal overflow, and the 44px range hit height. No browser console errors observed. Physical touch devices were not tested.
 - **Deployment:** User approved the localhost preview. Code commit `642b05b` was pushed to GitHub `main`; Vercel successfully released production deployment `Gup4uEsrSi5iwkzFRY1DWeozq1PB` for `shm-ventures/music-player`. Verified the live URL serves `index-B6T9Wsxv.js`, the seek range has a 44px hit height, five-second forward/backward keyboard steps update the timeline, and no console errors appeared during the check.
+
+### 2026-10-28 — Listening room visual polish
+
+- **Summary:** Improved the current-song highlight and smaller text, restyled the personal playlist editor, added subtle press feedback, and added a gentle artwork crossfade that retains the previous cover while the next image loads. Motion respects reduced-motion preferences.
+- **Files:** `src/components/player/MinimalistPlayer.tsx`, `src/components/player/player.css`, `src/components/sidebar/library.css`.
+- **Validation:** Production build and diff check passed. Inspected desktop and 320/375px browser layouts, opened a personal playlist, selected and played a song, and confirmed no horizontal page overflow or console errors. Available cloud tracks used the same artwork, so the crossfade between distinct covers was not visually verified. No physical mobile devices tested.
+- **Deployment:** User approved the localhost preview and authorized release via the existing GitHub `main` integration for `shm-ventures/music-player`. Production verification will be recorded after deployment.

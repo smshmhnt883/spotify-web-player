@@ -28,6 +28,19 @@ function Equalizer({ playing }: { playing: boolean }) {
   return <span className={`vx-equalizer ${playing ? 'is-playing' : ''}`} aria-hidden="true"><i /><i /><i /><i /></span>;
 }
 
+function ArtworkImage({ track }: { track: Track | null }) {
+  const src = coverFor(track);
+  const [covers, setCovers] = useState({ current: src, previous: '', alt: `${track?.album || 'VaultX'} cover artwork` });
+  const [loaded, setLoaded] = useState('');
+  useEffect(() => {
+    setCovers(old => ({ current: src, previous: old.current !== src ? old.current : old.previous, alt: `${track?.album || 'VaultX'} cover artwork` }));
+  }, [src, track?.album]);
+  return <span className="vx-artwork-images">
+    {covers.previous && <img className="vx-artwork-previous" src={covers.previous} alt="" aria-hidden="true" onError={imageFallback} />}
+    <img key={covers.current} className={`vx-artwork-current ${covers.previous && loaded !== covers.current ? 'is-loading' : ''}`} src={covers.current} alt={covers.alt} onLoad={() => setLoaded(covers.current)} onError={imageFallback} />
+  </span>;
+}
+
 const Timeline = memo(function Timeline() {
   const currentTime = usePlayerStore(s => s.currentTime);
   const duration = usePlayerStore(s => s.duration);
@@ -173,7 +186,7 @@ export function MinimalistPlayer({ onToggleAlbumsSlideBar, onOpenCloudVaultModal
           <div className="vx-artwork-stage"><div className="vx-orbit-line" aria-hidden="true" />
             <div className={`vx-vinyl ${isPlaying ? 'is-playing' : ''}`} aria-hidden="true"><div className="vx-vinyl-label"><Disc3 size={25} /><span>VAULTX<br />PERSONAL PRESSING</span></div></div>
             <button className={`vx-artwork ${isPlaying ? 'is-playing' : ''}`} onClick={() => setDetailOpen(true)} aria-label={`Open details for ${track?.title || 'current track'}`} disabled={!track}>
-              <img src={coverFor(track)} alt={`${track?.album || 'VaultX'} cover artwork`} onError={imageFallback} />
+              <ArtworkImage track={track} />
               <span className="vx-artwork-stamp"><span>VX</span><span>THE PERSONAL<br />COLLECTION</span></span><span className="vx-artwork-action">Lyrics & track details <ArrowUpRight size={17} aria-hidden="true" /></span>
             </button>
           </div>

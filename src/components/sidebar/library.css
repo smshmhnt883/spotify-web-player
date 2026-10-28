@@ -89,3 +89,21 @@
 .vx-personal-track > span { display: block; overflow-wrap: anywhere; margin-bottom: 8px; }
 .vx-personal-track > div { display: flex; gap: 8px; }
 .vx-personal-track button { min-width: 44px; }
+
+/* Personal playlists use the same warm surfaces as the library. */
+.vx-personal-editor form { padding: 16px; margin-bottom: 18px; background: #222522; border: 1px solid #353a34; border-radius: 10px; }
+.vx-personal-editor form label { margin-top: 0; color: #d6d8d0; font-weight: 600; }
+.vx-personal-editor form input, .vx-personal-editor select { background: #191b1a; border-color: #454940; }
+.vx-personal-editor form input:focus, .vx-personal-editor select:focus { outline: 2px solid #e8b49b; outline-offset: 2px; }
+.vx-personal-editor button { background: #252824; border-color: #393e37; padding: 8px 12px; }
+.vx-personal-editor button:hover:not(:disabled) { background: #34332d; border-color: #a77e6b; }
+.vx-personal-editor button:active:not(:disabled) { transform: scale(.96); }
+.vx-personal-editor button:disabled { opacity: .42; }
+.vx-personal-editor form button { background: #e8b49b; border-color: #e8b49b; color: #25251f; font-weight: 600; }
+.vx-personal-editor form button:hover:not(:disabled) { background: #f2c7b1; color: #25251f; }
+.vx-personal-editor h3 { color: #f3eee7; font-size: 19px; letter-spacing: -.02em; }
+.vx-personal-track { padding: 14px 12px; border: 1px solid #ffffff0d; border-radius: 8px; background: #ffffff04; margin: 8px 0; }
+.vx-personal-track > span { color: #f3eee7; font-size: 13px; font-weight: 600; }
+.vx-personal-track button { color: #d4d6ce; }
+.vx-library-section-title, .vx-library-row-copy small, .vx-library-footer small { font-size: 12px; }
+@media (prefers-reduced-motion: reduce) { .vx-personal-editor button { transition: none; } }

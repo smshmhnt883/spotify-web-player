@@ -132,3 +132,26 @@
 .vx-transport-buttons { margin-bottom: 0; }
 .vx-transport-buttons > .vx-icon-button { min-width: 44px; min-height: 44px; }
 @media (max-width: 640px) { .vx-timeline { font-size: 11px; }.vx-transport { gap: 0; }.vx-transport-buttons { gap: clamp(8px, 4vw, 23px); } }
+
+/* Small visual refinements for the listening room. */
+.vx-artwork-images { position: absolute; inset: 0; display: block; overflow: hidden; }
+.vx-artwork-images img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.vx-artwork-current { animation: vx-cover-arrive .4s ease-out both; }
+.vx-artwork-current.is-loading { opacity: 0; animation: none; }
+@keyframes vx-cover-arrive { from { opacity: 0; } to { opacity: 1; } }
+.vx-track-row.is-current { background: #e8b49b18; border-color: #e8b49b35; box-shadow: inset 3px 0 0 var(--vx-accent); }
+.vx-track-row.is-current .vx-track-number { color: var(--vx-accent); }
+.vx-row-copy strong { font-size: 13px; }
+.vx-row-copy > span, .vx-track-duration, .vx-list-caption, .vx-playing-summary > span > span { font-size: 12px; }
+.vx-eyebrow, .vx-rotation-heading .vx-eyebrow, .vx-section-caption { font-size: 10px; }
+.vx-timeline > span { font-size: 11px; }
+.vx-row-action, .vx-play-button, .vx-like-button { transition: color .18s, background .18s, border-color .18s, transform .16s, box-shadow .18s; }
+.vx-row-action:active:not(:disabled), .vx-play-button:active:not(:disabled), .vx-like-button:active:not(:disabled) { transform: scale(.92); }
+.vx-row-action.is-active { background: #e8b49b12; }
+@media (max-width: 640px) {
+  .vx-intro .vx-eyebrow, .vx-rotation-heading .vx-eyebrow, .vx-section-caption { font-size: 10px; }
+  .vx-list-caption, .vx-row-copy > span, .vx-playing-summary > span > span, .vx-timeline > span { font-size: 12px; }
+  .vx-row-copy strong, .vx-playing-summary strong { font-size: 13px; }
+  .vx-track-duration { font-size: 11px; }
+}
+@media (prefers-reduced-motion: reduce) { .vx-artwork-current { animation: none; } }
