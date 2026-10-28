@@ -135,7 +135,7 @@ export function MinimalistPlayer({ onToggleAlbumsSlideBar, onOpenCloudVaultModal
           <div className="vx-section-caption"><span><span className={`vx-live-dot ${isPlaying ? 'is-playing' : ''}`} /> {isPlaying ? 'NOW PLAYING' : 'ON THE TURNTABLE'}</span><span>SIDE A · {String(contextIndex + 1).padStart(2, '0')}</span></div>
           <div className="vx-artwork-stage"><div className="vx-orbit-line" aria-hidden="true" />
             <div className={`vx-vinyl ${isPlaying ? 'is-playing' : ''}`} aria-hidden="true"><div className="vx-vinyl-label"><Disc3 size={25} /><span>VAULTX<br />PERSONAL PRESSING</span></div></div>
-            <button className="vx-artwork" onClick={() => setDetailOpen(true)} aria-label={`Open details for ${track?.title || 'current track'}`} disabled={!track}>
+            <button className={`vx-artwork ${isPlaying ? 'is-playing' : ''}`} onClick={() => setDetailOpen(true)} aria-label={`Open details for ${track?.title || 'current track'}`} disabled={!track}>
               <img src={coverFor(track)} alt={`${track?.album || 'VaultX'} cover artwork`} onError={imageFallback} />
               <span className="vx-artwork-stamp"><span>VX</span><span>THE PERSONAL<br />COLLECTION</span></span><span className="vx-artwork-action">Lyrics & track details <ArrowUpRight size={17} aria-hidden="true" /></span>
             </button>

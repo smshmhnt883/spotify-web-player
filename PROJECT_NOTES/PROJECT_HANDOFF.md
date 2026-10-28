@@ -32,3 +32,10 @@ This is the shared handoff log for work on this music player across Codex and Go
 - **Files:** `PROJECT_NOTES/PROJECT_HANDOFF.md`.
 - **Validation:** Confirmed the Git working tree was clean before adding this file. No application code changed; app build not run.
 - **Deployment:** Not deployed. This documentation-only change is intended for the shared Git repository.
+
+### 2026-10-28 — Enlarge hero artwork and streamline turntable stage
+
+- **Summary:** Enlarged the hero album artwork jacket and vinyl disc within the turntable stage by expanding the stage area, increasing desktop grid height, and widening the turntable column. Streamlined the surrounding track heading, metadata margins, and turntable footer to make the photo the commanding center of attraction across desktop and mobile screens. Added ambient playing glow to the artwork.
+- **Files:** `src/components/player/MinimalistPlayer.tsx`, `src/components/player/player.css`, `PROJECT_NOTES/PROJECT_HANDOFF.md`.
+- **Validation:** `npm run build` ran and completed with 0 errors (`tsc -b && vite build` verified). Responsive styles verified for desktop, tablet, and mobile breakpoints.
+- **Deployment:** Approved by user. Pushed to `main` branch on GitHub (`https://github.com/smshmhnt883/spotify-web-player`), triggering automatic production deployment on Vercel (`https://music-player-alpha-beige.vercel.app/`).
