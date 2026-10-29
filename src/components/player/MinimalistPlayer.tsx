@@ -83,7 +83,7 @@ const Timeline = memo(function Timeline() {
         event.preventDefault();
         seek(value + (event.key === 'ArrowRight' ? 5 : -5));
       }} />
-    <span>{formatTime(safeDuration)}</span>
+    <span>{safeDuration > 0 ? formatTime(safeDuration) : '—'}</span>
   </div>;
 });
 
@@ -91,7 +91,7 @@ export function MinimalistPlayer({ onToggleAlbumsSlideBar, onOpenCloudVaultModal
   const state = usePlayerStore(useShallow(s => ({
     currentTrack: s.currentTrack, isPlaying: s.isPlaying, volume: s.volume, isMuted: s.isMuted,
     isShuffle: s.isShuffle, repeatMode: s.repeatMode, likedTrackIds: s.likedTrackIds,
-    contextTracks: s.contextTracks, contextIndex: s.contextIndex, playlists: s.playlists,
+    contextTracks: s.contextTracks, contextIndex: s.contextIndex, contextPlaylistId: s.contextPlaylistId, playlists: s.playlists,
     userQueue: s.userQueue, cloudSyncStatus: s.cloudSyncStatus, isCloudSynced: s.isCloudSynced,
     playTrack: s.playTrack, togglePlay: s.togglePlay, nextTrack: s.nextTrack,
     previousTrack: s.previousTrack, setVolume: s.setVolume, toggleMute: s.toggleMute,
@@ -116,11 +116,11 @@ export function MinimalistPlayer({ onToggleAlbumsSlideBar, onOpenCloudVaultModal
   const liked = !!track && likedTrackIds.includes(track.id);
   const searching = query.trim().length > 0;
   const displayedTracks = useMemo(() => {
-    const baseTracks = contextTracks.length >= allTracks.length ? contextTracks : allTracks;
+    const baseTracks = state.contextPlaylistId ? contextTracks : playlists[0]?.tracks ?? contextTracks;
     const tracks = searching ? allTracks : filter === 'favorites' ? allTracks.filter(t => likedTrackIds.includes(t.id)) : filter === 'queue' ? userQueue : baseTracks;
     const term = query.trim().toLocaleLowerCase();
     return tracks.map(sanitizeTrack).filter(t => !term || `${t.title} ${t.artist} ${t.album}`.toLocaleLowerCase().includes(term));
-  }, [searching, allTracks, filter, likedTrackIds, userQueue, contextTracks, query]);
+  }, [searching, allTracks, playlists, filter, likedTrackIds, userQueue, contextTracks, state.contextPlaylistId, query]);
 
   useEffect(() => {
     const handler = () => setFullscreen(!!document.fullscreenElement);
@@ -152,7 +152,8 @@ export function MinimalistPlayer({ onToggleAlbumsSlideBar, onOpenCloudVaultModal
   const selectTrack = (selected: Track) => {
     if (currentTrack?.id === selected.id) state.togglePlay();
     else {
-      state.playTrack(selected, filter === 'queue' && !searching ? contextTracks : displayedTracks);
+      const playlistId = searching || filter === 'favorites' ? null : state.contextPlaylistId ?? (filter === 'album' ? playlists[0]?.id ?? null : null);
+      state.playTrack(selected, filter === 'queue' && !searching ? contextTracks : displayedTracks, playlistId);
       if (filter === 'queue' && !searching) state.removeFromQueue(selected.id);
     }
   };
@@ -215,7 +216,7 @@ export function MinimalistPlayer({ onToggleAlbumsSlideBar, onOpenCloudVaultModal
                 <button className="vx-track-select" onClick={() => selectTrack(item)} aria-label={`${selected && isPlaying ? 'Pause' : 'Play'} ${item.title} by ${item.artist}`} aria-current={selected ? 'true' : undefined}>
                   <span className="vx-track-number">{selected ? <Equalizer playing={isPlaying} /> : String(index + 1).padStart(2, '0')}</span>
                   <span className="vx-row-cover"><img src={coverFor(item)} alt="" loading="lazy" onError={imageFallback} /><span>{selected && isPlaying ? <Pause size={15} fill="currentColor" /> : <Play size={15} fill="currentColor" />}</span></span>
-                  <span className="vx-row-copy"><strong title={item.title}>{item.title}</strong><span>{item.artist}</span></span><span className="vx-track-duration">{formatTime(item.durationSec)}</span>
+                  <span className="vx-row-copy"><strong title={item.title}>{item.title}</strong><span>{item.artist}</span></span><span className="vx-track-duration">{item.durationSec > 0 ? formatTime(item.durationSec) : '—'}</span>
                 </button>
                 <button className="vx-row-action" aria-label={`Add ${item.title} to playlist`} onClick={() => setPlaylistTrack(item)}><ListMusic size={16} /></button>
                 <button className={`vx-row-action ${isFavorite ? 'is-active' : ''}`} aria-label={`${isFavorite ? 'Unfavorite' : 'Favorite'} ${item.title}`} aria-pressed={isFavorite} onClick={() => state.toggleLike(item.id)}><Heart size={16} fill={isFavorite ? 'currentColor' : 'none'} /></button>

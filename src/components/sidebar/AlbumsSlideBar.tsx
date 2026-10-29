@@ -107,7 +107,7 @@ export const AlbumsSlideBar: React.FC<AlbumsSlideBarProps> = ({ isOpen, onClose,
 
   const selectAlbum = (album: Playlist) => {
     navigateTo('home', album.id);
-    if (album.tracks.length) playTrack(album.tracks[0], album.tracks);
+    if (album.tracks.length) playTrack(album.tracks[0], album.tracks, album.id);
     onClose();
   };
   const selectTrack = (track: Track, context: Track[]) => {
@@ -200,7 +200,7 @@ export const AlbumsSlideBar: React.FC<AlbumsSlideBarProps> = ({ isOpen, onClose,
                   <button key={track.id} className={`vx-library-row ${currentTrack?.id === track.id ? 'is-current' : ''}`} onClick={() => selectTrack(track, trackContext)}>
                     <span className="vx-library-song-art"><img src={artworkFor(track.coverUrl)} alt="" loading="lazy" />{currentTrack?.id === track.id && <span className="vx-library-song-playing"><Music2 size={17} aria-hidden="true" /></span>}</span>
                     <span className="vx-library-row-copy"><strong>{track.title}</strong><small>{track.artist}</small></span>
-                    <span className="vx-library-row-duration">{formatTime(track.durationSec)}</span>
+                    <span className="vx-library-row-duration">{track.durationSec > 0 ? formatTime(track.durationSec) : '—'}</span>
                   </button>
                 ))}
               </div>

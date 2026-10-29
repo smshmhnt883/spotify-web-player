@@ -4,7 +4,7 @@ import { transform } from 'esbuild';
 let hooks=[], cursor=0, pending=[];
 const track = {id:'a',title:'A',audioUrl:'https://example.com/a.mp3',durationSec:100,coverUrl:'',artist:'',album:''};
 const state = {currentTrack:track,isPlaying:false,currentTime:27,volume:.4,isMuted:false,retryToken:0,playbackStatus:'paused',playbackError:'',history:[],
-setCurrentTime:t=>state.currentTime=t,setDuration:d=>state.duration=d,setIsPlaying:v=>state.isPlaying=v,recordPlayed:t=>state.history.push(t.id),nextTrack:()=>{state.currentTrack={...track,id:'b',audioUrl:'https://example.com/b.mp3'};state.currentTime=0;},previousTrack:()=>{},togglePlay:()=>state.isPlaying=!state.isPlaying,toggleMute:()=>{},toggleDrawer:()=>{}};
+setCurrentTime:t=>state.currentTime=t,setDuration:d=>state.duration=d,setTrackDuration:(url,d)=>{if(state.currentTrack.audioUrl===url){state.duration=d;state.currentTrack={...state.currentTrack,durationSec:d,durationKnown:true};}},setIsPlaying:v=>state.isPlaying=v,recordPlayed:t=>state.history.push(t.id),nextTrack:()=>{state.currentTrack={...track,id:'b',audioUrl:'https://example.com/b.mp3'};state.currentTime=0;},previousTrack:()=>{},togglePlay:()=>state.isPlaying=!state.isPlaying,toggleMute:()=>{},toggleDrawer:()=>{}};
 const listeners = new Set();
 const store = selector=>selector?selector(state):state;store.getState=()=>state;
 store.setState=update=>{const previous={...state};Object.assign(state,update);listeners.forEach(fn=>fn(state,previous));};
@@ -30,6 +30,7 @@ const code=(await transform(source,{loader:'tsx',format:'esm'})).code;
 const {AudioEngine}=await import(`data:text/javascript;base64,${Buffer.from(code).toString('base64')}`);
 const render=()=>{cursor=0;pending=[];AudioEngine();pending.forEach(fn=>fn());};
 render();let a=AudioMock.instances.at(-1);a.emit('loadedmetadata');assert.equal(a.currentTime,27);assert.equal(a.paused,true);
+assert.equal(state.currentTrack.durationKnown,true);
 state.seek(27.5); assert.equal(a.currentTime,27.5,'sub-second seeks must reach the audio element');
 state.seek(27.5); a.currentTime=12; state.seek(27.5); assert.equal(a.currentTime,27.5,'repeated requests are not lost');
 const beforeProgress=a.currentTime; state.setCurrentTime(28); assert.equal(a.currentTime,beforeProgress,'progress is not a seek command');

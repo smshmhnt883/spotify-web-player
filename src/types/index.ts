@@ -9,6 +9,7 @@ export interface Track {
   artist: string;
   album: string;
   durationSec: number;
+  durationKnown?: boolean;
   audioUrl: string;
   coverUrl: string;
   dominantColor: string; // e.g. "#450af5" or "#2e77d0"

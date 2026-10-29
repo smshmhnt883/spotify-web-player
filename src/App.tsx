@@ -5,6 +5,7 @@ import { DeviceModal } from './components/modals/DeviceModal';
 import { UploadMusicModal } from './components/upload/UploadMusicModal';
 import { CloudVaultModal } from './components/modals/CloudVaultModal';
 import { AudioEngine } from './services/AudioEngine';
+import { TrackMetadataLoader } from './services/TrackMetadataLoader';
 import { usePlayerStore } from './store/usePlayerStore';
 
 export const App: React.FC = () => {
@@ -24,6 +25,7 @@ export const App: React.FC = () => {
     <div className="vaultx-root">
       {/* 1. Headless Audio & MediaSession Service */}
       <AudioEngine />
+      <TrackMetadataLoader />
 
       {/* 2. Main Minimalist One-Home-Page Player (Matches Reference Screenshot) */}
       <MinimalistPlayer

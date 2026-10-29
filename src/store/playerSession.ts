@@ -5,6 +5,7 @@ export interface SavedSession {
   currentTime: number;
   contextTracks: Track[];
   contextIndex: number;
+  contextPlaylistId: string | null;
   userQueue: Track[];
   likedTrackIds: string[];
   personalPlaylists: Playlist[];
@@ -23,26 +24,31 @@ const safeUrl = (value: unknown) => typeof value === 'string' && (/^https?:\/\//
 export const savedTrack = (value: unknown): value is Track => record(value)
   && ['id', 'title', 'artist', 'album', 'coverUrl', 'dominantColor'].every(key => typeof value[key] === 'string')
   && safeUrl(value.audioUrl) && finite(value.durationSec) && value.durationSec >= 0
+  && (value.durationKnown === undefined || typeof value.durationKnown === 'boolean')
   && (value.lyrics === undefined || (Array.isArray(value.lyrics) && value.lyrics.every(line => record(line) && finite(line.timeMs) && typeof line.text === 'string')))
   && (value.releaseYear === undefined || finite(value.releaseYear));
-const tracks = (value: unknown): Track[] => Array.isArray(value) ? value.filter(savedTrack) : [];
+const isDemoId = (id: string) => /^track-[1-5]$/.test(id);
+const tracks = (value: unknown): Track[] => Array.isArray(value) ? value.filter(savedTrack).filter(t => !isDemoId(t.id)).map(t => ({ ...t, durationSec: t.durationKnown ? t.durationSec : 0 })) : [];
 
 export function readSession(): Partial<SavedSession> {
   try {
     const data: unknown = JSON.parse(localStorage.getItem(sessionKey) || 'null');
     if (!record(data) || data.version !== 1 || !record(data.session)) return {};
     const s = data.session;
-    const currentTrack = savedTrack(s.currentTrack) ? s.currentTrack : null;
+    const currentTrack = savedTrack(s.currentTrack) && !isDemoId(s.currentTrack.id) ? { ...s.currentTrack, durationSec: s.currentTrack.durationKnown ? s.currentTrack.durationSec : 0 } : null;
     const contextTracks = tracks(s.contextTracks);
+    const storedIndex = finite(s.contextIndex) ? Math.max(0, Math.floor(s.contextIndex)) : 0;
+    const survivingBeforeIndex = Array.isArray(s.contextTracks) ? tracks(s.contextTracks.slice(0, storedIndex)).length : 0;
     return {
-      currentTrack, contextTracks, contextIndex: finite(s.contextIndex) ? Math.max(0, Math.min(Math.floor(s.contextIndex), contextTracks.length - 1)) : 0,
+      contextPlaylistId: typeof s.contextPlaylistId === 'string' ? s.contextPlaylistId : null,
+      currentTrack, contextTracks, contextIndex: Math.max(0, Math.min(survivingBeforeIndex, contextTracks.length - 1)),
       currentTime: currentTrack && finite(s.currentTime) ? Math.max(0, s.currentTime) : 0,
       userQueue: tracks(s.userQueue), recentlyPlayed: Array.from(new Map(tracks(s.recentlyPlayed).map(t => [t.id, t])).values()).slice(0, 30),
       personalPlaylists: Array.isArray(s.personalPlaylists) ? s.personalPlaylists.filter(p => record(p) && typeof p.id === 'string' && typeof p.title === 'string').map(p => ({
         id: p.id, title: p.title.slice(0, 100), description: '', creator: 'You', coverUrl: '/artwork.png', dominantColor: '#e8b49b',
         tracks: Array.from(new Map(tracks(p.tracks).map(t => [t.id, t])).values()),
       })) : [],
-      likedTrackIds: Array.isArray(s.likedTrackIds) ? [...new Set(s.likedTrackIds.filter((id): id is string => typeof id === 'string'))] : [],
+      likedTrackIds: Array.isArray(s.likedTrackIds) ? [...new Set(s.likedTrackIds.filter((id): id is string => typeof id === 'string' && !isDemoId(id)))] : [],
       volume: finite(s.volume) ? Math.min(1, Math.max(0, s.volume)) : .8,
       previousVolume: finite(s.previousVolume) ? Math.min(1, Math.max(0, s.previousVolume)) : .8,
       isMuted: s.isMuted === true, isShuffle: s.isShuffle === true,
@@ -53,7 +59,7 @@ export function readSession(): Partial<SavedSession> {
 
 export function writeSession(s: SavedSession) {
   try {
-    const currentTrack = savedTrack(s.currentTrack) ? s.currentTrack : null;
+    const currentTrack = savedTrack(s.currentTrack) && !isDemoId(s.currentTrack.id) ? { ...s.currentTrack, durationSec: s.currentTrack.durationKnown ? s.currentTrack.durationSec : 0 } : null;
     localStorage.setItem(sessionKey, JSON.stringify({ version: 1, session: {
       ...s, currentTrack, currentTime: currentTrack ? s.currentTime : 0,
       contextTracks: tracks(s.contextTracks), userQueue: tracks(s.userQueue), recentlyPlayed: tracks(s.recentlyPlayed),

@@ -94,10 +94,11 @@ export function sanitizeTrackMetadata(rawTitle: string, rawArtist: string, audio
   }
 
   // Check 3: Known record labels or upload channels inverted
-  if (/brown\s*town\s*music/i.test(title) || /brown\s*town\s*music/i.test(artist)) {
+  const identity = `${rawTitle} ${rawArtist}`;
+  if (/\bcalifornia\s+love\b/i.test(identity) && (/brown\s*town\s*music/i.test(title) || /brown\s*town\s*music/i.test(artist))) {
     title = 'California Love';
     artist = 'Cheema Y, Gur Sidhu';
-  } else if (/rehaan\s*records/i.test(title) || /rehaan\s*records/i.test(artist)) {
+  } else if (/\bfor\s+a\s+reason\b/i.test(identity) && (/rehaan\s*records/i.test(title) || /rehaan\s*records/i.test(artist))) {
     title = 'For A Reason';
     artist = 'Karan Aujla, Tania, Ikky';
   }

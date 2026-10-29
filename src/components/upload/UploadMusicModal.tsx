@@ -48,7 +48,7 @@ export const UploadMusicModal: React.FC<UploadMusicModalProps> = ({ isOpen, onCl
         title,
         artist,
         album: 'My Uploads',
-        durationSec: 180,
+        durationSec: 0,
         audioUrl,
         coverUrl: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=500&auto=format&fit=crop&q=80',
         dominantColor,

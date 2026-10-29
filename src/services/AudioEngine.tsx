@@ -12,7 +12,6 @@ export const AudioEngine: React.FC = () => {
     isMuted,
     currentTime,
     setCurrentTime,
-    setDuration,
     setIsPlaying,
     nextTrack,
     previousTrack,
@@ -48,15 +47,18 @@ export const AudioEngine: React.FC = () => {
     const loaded = () => {
       if (!active) return;
       if (Number.isFinite(audio.duration) && audio.duration > 0) {
-        setDuration(audio.duration);
+        store().setTrackDuration(currentTrack.audioUrl, audio.duration);
         audio.currentTime = Math.min(Math.max(0, resumeRef.current), Math.max(0, audio.duration - .1));
         setCurrentTime(audio.currentTime);
       }
     };
+    const durationChanged = () => {
+      if (active) store().setTrackDuration(currentTrack.audioUrl, audio.duration);
+    };
     const playing = () => {
       if (!active) return;
       status('playing');
-      if (!recorded) { store().recordPlayed(currentTrack); recorded = true; }
+      if (!recorded) { store().recordPlayed(store().currentTrack ?? currentTrack); recorded = true; }
     };
     const waiting = () => { if (store().isPlaying) status('buffering'); };
     const pause = () => { if (active && !audio.ended && !audio.error) { setCurrentTime(audio.currentTime); store().setIsPlaying(false); status('paused'); } };
@@ -70,6 +72,7 @@ export const AudioEngine: React.FC = () => {
       }
     };
     audio.addEventListener('loadedmetadata', loaded);
+    audio.addEventListener('durationchange', durationChanged);
     audio.addEventListener('playing', playing);
     audio.addEventListener('waiting', waiting);
     audio.addEventListener('stalled', waiting);
