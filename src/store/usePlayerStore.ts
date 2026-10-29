@@ -344,13 +344,29 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
           if (data && Array.isArray(data.playlists) && data.playlists.length > 0) {
             const cleanPlaylists = processPlaylists(data.playlists);
             const total = data.totalTracks || cleanPlaylists.reduce((acc: number, p: any) => acc + (p.tracks?.length || 0), 0);
+            const cloudTracks = cleanPlaylists[0]?.tracks || [];
+            const currentContext = get().contextTracks;
+            const isPlayingCloudContext = currentContext.length === 0 || currentContext.some(t => t.id.startsWith('r2-') || t.album === 'Cloud Vault Favorites');
+            let newContextTracks = currentContext;
+            let newContextIndex = get().contextIndex;
+            if (isPlayingCloudContext && cloudTracks.length > 0) {
+              newContextTracks = cloudTracks;
+              const curId = get().currentTrack?.id;
+              const foundIdx = curId ? cloudTracks.findIndex(t => t.id === curId) : -1;
+              newContextIndex = foundIdx !== -1 ? foundIdx : 0;
+            }
+
             set({
               playlists: [...cleanPlaylists, ...PLAYLISTS],
               isCloudSynced: true,
               cloudSyncStatus: 'success',
               cloudSyncMessage: `Real-Time Discovery: ${total} tracks loaded`,
               cloudTrackCount: total,
-              workerApiUrl: cleanWorkerUrl
+              workerApiUrl: cleanWorkerUrl,
+              ...(isPlayingCloudContext && cloudTracks.length > 0 ? {
+                contextTracks: newContextTracks,
+                contextIndex: newContextIndex
+              } : {})
             });
             if (typeof window !== 'undefined') {
               try { localStorage.setItem('vaultx_worker_api_url', cleanWorkerUrl); } catch { /* Storage may be disabled. */ }
@@ -430,9 +446,22 @@ usePlayerStore.subscribe((s, previous) => {
   if (s.playlists !== previous.playlists) {
     const fresh = new Map(s.playlists.flatMap(p => p.tracks).map(t => [t.id, t]));
     const reconcile = (t: Track) => fresh.get(t.id) || t;
-    usePlayerStore.setState({ currentTrack: s.currentTrack ? reconcile(s.currentTrack) : null,
-      contextTracks: s.contextTracks.map(reconcile), userQueue: s.userQueue.map(reconcile),
-      recentlyPlayed: s.recentlyPlayed.map(reconcile), personalPlaylists: s.personalPlaylists.map(p => ({ ...p, tracks: p.tracks.map(reconcile) })) });
+    const activeCloud = s.playlists.find(p => p.id === 'playlist-cloud-vault') || s.playlists[0];
+    const isCloudContext = s.contextTracks.length === 0 || s.contextTracks.some(t => t.id.startsWith('r2-') || t.album === 'Cloud Vault Favorites');
+    const updatedContextTracks = (isCloudContext && activeCloud && activeCloud.tracks.length > 0)
+      ? activeCloud.tracks
+      : s.contextTracks.map(reconcile);
+    const updatedTrack = s.currentTrack ? reconcile(s.currentTrack) : (updatedContextTracks[0] || null);
+    const updatedIndex = updatedTrack ? updatedContextTracks.findIndex(t => t.id === updatedTrack.id) : 0;
+
+    usePlayerStore.setState({
+      currentTrack: updatedTrack,
+      contextTracks: updatedContextTracks,
+      contextIndex: updatedIndex !== -1 ? updatedIndex : 0,
+      userQueue: s.userQueue.map(reconcile),
+      recentlyPlayed: s.recentlyPlayed.map(reconcile),
+      personalPlaylists: s.personalPlaylists.map(p => ({ ...p, tracks: p.tracks.map(reconcile) }))
+    });
     return;
   }
   const immediate = ['currentTrack', 'contextTracks', 'userQueue', 'likedTrackIds', 'personalPlaylists', 'recentlyPlayed', 'volume', 'previousVolume', 'isMuted', 'isShuffle', 'repeatMode'] as const;

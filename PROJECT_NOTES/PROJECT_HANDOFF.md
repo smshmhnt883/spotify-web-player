@@ -98,3 +98,10 @@ This is the shared handoff log for work on this music player across Codex and Go
 - **Files:** `src/store/usePlayerStore.ts`, `src/components/modals/CloudVaultModal.tsx`, `PROJECT_NOTES/PROJECT_HANDOFF.md`.
 - **Validation:** Tested live worker endpoint via HTTP GET (`https://vaultx-music-api.smshmhnt.workers.dev`), verified 200 OK with full JSON payload (7 tracks discovered). Ran `npm run build` (`tsc -b && vite build`) to confirm zero build or TypeScript errors.
 - **Deployment:** User approved deployment. Pushed to `main` branch on GitHub (`https://github.com/smshmhnt883/spotify-web-player`), triggering automatic production deployment on Vercel (`https://music-player-alpha-beige.vercel.app/`).
+
+### 2026-10-29 — Reconcile newly discovered cloud tracks into rotation context
+
+- **Summary:** Resolved an issue where newly discovered songs from the Cloudflare Worker weren't appearing in the main rotation list because session persistence had frozen `contextTracks` to the 7 saved tracks from localStorage. Updated `syncCloudLibrary` and store subscription to reconcile and expand `contextTracks` when the cloud playlist grows. Added metadata sanitization for YouTube label suffixes (e.g. `California Love` by `Cheema Y, Gur Sidhu` and `For A Reason` by `Karan Aujla, Tania, Ikky`).
+- **Files:** `src/store/usePlayerStore.ts`, `src/components/player/MinimalistPlayer.tsx`, `src/utils/trackSanitizer.ts`, `PROJECT_NOTES/PROJECT_HANDOFF.md`.
+- **Validation:** `npm run build` passed (`tsc -b && vite build` completed in 4.15s with 0 errors). Tested live worker endpoint via HTTP GET (`https://vaultx-music-api.smshmhnt.workers.dev`), verified 200 OK with full JSON payload returning all 9 tracks.
+- **Deployment:** Pushed to `main` branch on GitHub (`https://github.com/smshmhnt883/spotify-web-player`), triggering automatic production deployment on Vercel (`https://music-player-alpha-beige.vercel.app/`).

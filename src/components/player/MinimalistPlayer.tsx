@@ -116,7 +116,8 @@ export function MinimalistPlayer({ onToggleAlbumsSlideBar, onOpenCloudVaultModal
   const liked = !!track && likedTrackIds.includes(track.id);
   const searching = query.trim().length > 0;
   const displayedTracks = useMemo(() => {
-    const tracks = searching ? allTracks : filter === 'favorites' ? allTracks.filter(t => likedTrackIds.includes(t.id)) : filter === 'queue' ? userQueue : contextTracks;
+    const baseTracks = contextTracks.length >= allTracks.length ? contextTracks : allTracks;
+    const tracks = searching ? allTracks : filter === 'favorites' ? allTracks.filter(t => likedTrackIds.includes(t.id)) : filter === 'queue' ? userQueue : baseTracks;
     const term = query.trim().toLocaleLowerCase();
     return tracks.map(sanitizeTrack).filter(t => !term || `${t.title} ${t.artist} ${t.album}`.toLocaleLowerCase().includes(term));
   }, [searching, allTracks, filter, likedTrackIds, userQueue, contextTracks, query]);
