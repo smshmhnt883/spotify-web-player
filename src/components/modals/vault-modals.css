@@ -105,3 +105,5 @@
   .vx-dialog[open], .vx-spinning, .vx-ambient-bars i { animation: none; }
   .vx-ambient-bars i { transform: scaleY(.6); }
 }
+
+.vx-plain-lyrics { white-space: pre-wrap; font-size: 21px; line-height: 1.8; color: var(--modal-ink); margin: 18px 0; overflow-wrap: anywhere; }
