@@ -85,7 +85,14 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
   searchQuery: '',
   categoryFilter: 'all',
   cloudVaultUrl: 'https://pub-4c18be52287241ab9bedbddc0e397a4c.r2.dev',
-  workerApiUrl: (() => { try { return localStorage.getItem('vaultx_worker_api_url') || ''; } catch { return ''; } })(),
+  workerApiUrl: (() => {
+    try {
+      const saved = localStorage.getItem('vaultx_worker_api_url');
+      return (saved && saved.trim()) ? saved.trim() : 'https://vaultx-music-api.smshmhnt.workers.dev';
+    } catch {
+      return 'https://vaultx-music-api.smshmhnt.workers.dev';
+    }
+  })(),
   isCloudSynced: false,
   cloudSyncStatus: 'idle',
   cloudSyncMessage: '',
@@ -305,7 +312,7 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
 
   syncCloudLibrary: async (urlOverride) => {
     const { workerApiUrl, cloudVaultUrl } = get();
-    const candidateWorker = (urlOverride !== undefined ? urlOverride : workerApiUrl || '').trim();
+    const candidateWorker = (urlOverride !== undefined ? urlOverride : workerApiUrl || 'https://vaultx-music-api.smshmhnt.workers.dev').trim();
 
     // Helper to replace generic stock/DJ covers with user's artwork
     const sanitizeCoverUrl = (url?: string) => {

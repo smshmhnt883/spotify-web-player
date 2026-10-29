@@ -91,3 +91,10 @@ This is the shared handoff log for work on this music player across Codex and Go
 - **Files:** `src/components/player/MinimalistPlayer.tsx`, `src/components/player/player.css`.
 - **Validation:** Production build passed. Inspected desktop and 320/375px phone-sized browser views, confirmed the title fits and no horizontal page overflow, verified animation play/pause and library access, and observed no console errors. Physical mobile devices were not tested.
 - **Deployment:** User approved the preview. Code commit `3a12f01` was pushed to GitHub `main` and successfully deployed to Vercel production (`FKE9a9vnFqr6ZVNybcF2N8saCdXQ`, `shm-ventures/music-player`). Local browser checks at 320x740, 375x812, 430x932 and 844x390 confirmed the title fits without horizontal overflow. The live URL returned HTTP 200 with `index-DxNtHBcS.js` and `index-CGdngwSX.css`; at 375px production playback activated the wave, no horizontal overflow occurred, and no console errors appeared. The handoff update follows in a documentation commit.
+
+### 2026-10-29 — Automatic Cloudflare Worker Real-Time Sync
+
+- **Summary:** Set `https://vaultx-music-api.smshmhnt.workers.dev` as the default Worker API endpoint in the player store and cloud vault modal. Any browser or mobile device visiting the app now automatically connects to the user's Cloudflare Worker on startup without manual URL entry, enabling instant discovery of new songs uploaded directly to the `my-music-vault` R2 bucket.
+- **Files:** `src/store/usePlayerStore.ts`, `src/components/modals/CloudVaultModal.tsx`, `PROJECT_NOTES/PROJECT_HANDOFF.md`.
+- **Validation:** Tested live worker endpoint via HTTP GET (`https://vaultx-music-api.smshmhnt.workers.dev`), verified 200 OK with full JSON payload (7 tracks discovered). Ran `npm run build` (`tsc -b && vite build`) to confirm zero build or TypeScript errors.
+- **Deployment:** User approved deployment. Pushed to `main` branch on GitHub (`https://github.com/smshmhnt883/spotify-web-player`), triggering automatic production deployment on Vercel (`https://music-player-alpha-beige.vercel.app/`).

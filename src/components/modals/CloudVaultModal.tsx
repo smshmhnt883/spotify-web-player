@@ -64,7 +64,7 @@ export const CloudVaultModal: React.FC<CloudVaultModalProps> = ({ isOpen, onClos
           </div>
           <form onSubmit={handleSync} className="vx-cloud-form">
             <label htmlFor="vault-worker-url">Cloudflare Worker URL <span>Optional</span></label>
-            <input id="vault-worker-url" type="url" value={inputUrl} onChange={event => setInputUrl(event.target.value)} placeholder="https://your-music.workers.dev" autoComplete="url" spellCheck={false} disabled={syncing} aria-describedby="vault-url-help" />
+            <input id="vault-worker-url" type="url" value={inputUrl} onChange={event => setInputUrl(event.target.value)} placeholder="https://vaultx-music-api.smshmhnt.workers.dev" autoComplete="url" spellCheck={false} disabled={syncing} aria-describedby="vault-url-help" />
             <p id="vault-url-help" className="vx-helper">New uploads appear when you sync. Leave this empty to use your saved library manifest.</p>
             <button className="vx-primary-button" type="submit" disabled={syncing}>{syncing ? <><RefreshCw size={16} className="vx-spinning" />Syncing library…</> : <><RefreshCw size={16} />Save & sync library</>}</button>
           </form>
