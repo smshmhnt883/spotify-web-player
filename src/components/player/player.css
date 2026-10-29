@@ -155,3 +155,18 @@
   .vx-track-duration { font-size: 11px; }
 }
 @media (prefers-reduced-motion: reduce) { .vx-artwork-current { animation: none; } }
+
+/* Listening room banner */
+.vx-intro { position: relative; isolation: isolate; overflow: hidden; align-items: center; min-height: 156px; padding: 28px clamp(28px, 6vw, 78px); border: 1px solid #ffffff09; border-radius: 10px; background: radial-gradient(ellipse at 77% -55%, #f5b696ed 0%, #c88e7770 21%, transparent 51%), #151617; }
+.vx-intro::before { content: ''; position: absolute; z-index: -1; width: 95%; height: 180%; left: 42%; top: -75%; transform: rotate(-16deg); border-radius: 50%; background: radial-gradient(ellipse at 60% 5%, #f5b799dc 0%, #c68c746b 24%, transparent 64%); filter: blur(15px); pointer-events: none; }
+.vx-intro-copy { position: relative; z-index: 2; flex: 0 0 auto; }
+.vx-intro .vx-eyebrow { margin-bottom: 10px; color: #bab9b6; }
+.vx-intro h1 { font-size: clamp(32px, 3.2vw, 48px); white-space: nowrap; }
+.vx-intro-wave { position: absolute; z-index: 1; right: 4%; bottom: 13%; width: 55%; height: 67%; display: flex; justify-content: space-between; align-items: center; gap: 3px; opacity: .83; pointer-events: none; mask-image: linear-gradient(90deg, transparent, #000 16%, #000 78%, transparent); }
+.vx-intro-wave::before { content: ''; position: absolute; left: 0; right: 0; top: 50%; height: 1px; background: #e8b49b25; }
+.vx-intro-wave i { display: block; flex: 1; max-width: 2px; min-width: 1px; height: var(--wave-height); border-radius: 3px; background: linear-gradient(to bottom, #edb99b30, #f0b99bcb 48%, #d59b8238); transform: scaleY(.8); animation: vx-intro-wave 1.8s ease-in-out infinite alternate; animation-delay: var(--wave-delay); animation-play-state: paused; }
+.vx-app.is-playing .vx-intro-wave i { animation-play-state: running; }
+@keyframes vx-intro-wave { from { transform: scaleY(.55); opacity: .55; } to { transform: scaleY(1); opacity: 1; } }
+@media (max-width: 850px) { .vx-intro { min-height: 145px; padding: 25px 28px; }.vx-intro-wave { right: -5%; width: 54%; opacity: .65; } }
+@media (max-width: 640px) { .vx-intro { min-height: 140px; padding: 23px 20px; align-items: flex-start; }.vx-intro h1 { font-size: clamp(26px, 7.3vw, 34px); letter-spacing: -1px; }.vx-intro .vx-eyebrow { font-size: 9px; letter-spacing: 1.3px; margin-bottom: 8px; }.vx-intro-wave { width: 78%; height: 45%; right: -6%; bottom: 1%; opacity: .68; } }
+@media (prefers-reduced-motion: reduce) { .vx-intro-wave i { animation: none; transform: none; } }

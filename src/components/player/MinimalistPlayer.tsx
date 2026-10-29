@@ -177,8 +177,13 @@ export function MinimalistPlayer({ onToggleAlbumsSlideBar, onOpenCloudVaultModal
     </header>
 
     <main className="vx-main" id="listening-room" tabIndex={-1}>
-      <div className="vx-intro"><div><p className="vx-eyebrow">A LITTLE SPACE. A LOT OF SOUND.</p><h1>The listening <em>room.</em></h1></div>
-        <button className="vx-collection-link" onClick={onToggleAlbumsSlideBar}><span>Your personal collection<strong>{allTracks.length} tracks, always within reach</strong></span><ArrowUpRight size={21} aria-hidden="true" /></button>
+      <div className="vx-intro"><div className="vx-intro-copy"><p className="vx-eyebrow">A LITTLE SPACE. A LOT OF SOUND.</p><h1>The listening <em>room.</em></h1></div>
+        <div className="vx-intro-wave" aria-hidden="true">{Array.from({ length: 84 }, (_, i) => {
+          const x = i / 83;
+          const envelope = Math.exp(-(((x - .52) / .28) ** 2));
+          const pulse = .18 + .82 * Math.abs(Math.sin(i * .22) * Math.cos(i * .105));
+          return <i key={i} style={{ '--wave-height': `${3 + 68 * envelope * pulse}%`, '--wave-delay': `${-(i % 13) * .11}s` } as CSSProperties} />;
+        })}</div>
       </div>
       <div className="vx-listening-grid">
         <section className="vx-turntable" aria-label="Now playing">
